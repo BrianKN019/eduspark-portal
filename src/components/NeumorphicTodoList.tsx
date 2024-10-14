@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X, CheckCircle, Circle, Tag, Clock } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface Todo {
   id: number;
@@ -18,7 +21,7 @@ const NeumorphicTodoList: React.FC = () => {
   const [newTodo, setNewTodo] = useState('');
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [dueDate, setDueDate] = useState<string>('');
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 
   const addTodo = () => {
     if (newTodo.trim() !== '') {
@@ -28,10 +31,10 @@ const NeumorphicTodoList: React.FC = () => {
         completed: false,
         color: selectedColor,
         priority: selectedPriority,
-        dueDate: dueDate ? new Date(dueDate) : undefined
+        dueDate: dueDate
       }]);
       setNewTodo('');
-      setDueDate('');
+      setDueDate(undefined);
     }
   };
 
@@ -82,12 +85,21 @@ const NeumorphicTodoList: React.FC = () => {
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
-          <Input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="neumorphic-input"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={dueDate}
+                onSelect={setDueDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
           <Button onClick={addTodo} className="neumorphic-button">
             <Plus className="h-5 w-5" />
           </Button>
@@ -110,7 +122,7 @@ const NeumorphicTodoList: React.FC = () => {
                 {todo.dueDate && (
                   <span className="text-xs text-gray-500 flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
-                    {todo.dueDate.toLocaleDateString()}
+                    {format(todo.dueDate, "PPP")}
                   </span>
                 )}
               </div>

@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Sparkles, Zap, Target, Trophy, Sun, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,6 +20,7 @@ const LearningPathFooter = lazy(() => import('@/components/dashboard/LearningPat
 const Dashboard: React.FC = () => {
   const [theme, setTheme] = useState('light');
   const [particles, setParticles] = useState([]);
+  const [inProgressCourses, setInProgressCourses] = useState([]);
 
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userData'],
@@ -54,16 +55,23 @@ const Dashboard: React.FC = () => {
       );
     }, 50);
 
+    // Simulated API call for in-progress courses
+    setInProgressCourses([
+      { id: 1, name: 'React Fundamentals', progress: 60 },
+      { id: 2, name: 'Advanced JavaScript', progress: 30 },
+      { id: 3, name: 'Node.js Basics', progress: 45 },
+    ]);
+
     return () => clearInterval(interval);
   }, []);
-
-  if (userLoading || progressLoading) {
-    return <div>Loading...</div>;
-  }
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
+
+  if (userLoading || progressLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className={`space-y-6 p-6 min-h-screen relative overflow-hidden transition-colors duration-500 ${theme === 'light' ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-gradient-to-r from-gray-900 to-indigo-900 text-white'}`}>
@@ -157,8 +165,10 @@ const Dashboard: React.FC = () => {
       </Card>
 
       <Card className="overflow-hidden shadow-lg">
+        <CardHeader>
+          <CardTitle>Learning Progress</CardTitle>
+        </CardHeader>
         <CardContent>
-          <h3 className="text-xl font-semibold mb-4">Learning Progress</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={weeklyProgressData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -168,6 +178,23 @@ const Dashboard: React.FC = () => {
               <Line type="monotone" dataKey="progress" stroke="#8884d8" activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden shadow-lg">
+        <CardHeader>
+          <CardTitle>In Progress Courses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {inProgressCourses.map(course => (
+            <div key={course.id} className="mb-4">
+              <h4 className="font-semibold">{course.name}</h4>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${course.progress}%` }}></div>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{course.progress}% complete</p>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
