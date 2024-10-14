@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings } from 'lucide-react';
+import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings, Award, Map, Users, Library } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
   const navItems = [
@@ -10,6 +10,10 @@ const Sidebar: React.FC = () => {
     { to: '/analytics', icon: BarChart2, label: 'Analytics' },
     { to: '/calendar', icon: Calendar, label: 'Calendar' },
     { to: '/discussions', icon: MessageSquare, label: 'Discussions' },
+    { to: '/achievements', icon: Award, label: 'Achievements & Badges' },
+    { to: '/learning-paths', icon: Map, label: 'Learning Paths' },
+    { to: '/community', icon: Users, label: 'Community & Forums' },
+    { to: '/resources', icon: Library, label: 'Resource Library' },
     { to: '/profile', icon: User, label: 'Profile' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
