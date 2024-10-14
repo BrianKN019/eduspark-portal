@@ -1,18 +1,19 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
-import OverviewTab from '@/components/dashboard/OverviewTab';
-import ProgressTab from '@/components/dashboard/ProgressTab';
-import NotificationsTab from '@/components/dashboard/NotificationsTab';
-import StudentDashboard from '@/components/dashboard/StudentDashboard';
-import InstructorDashboard from '@/components/dashboard/InstructorDashboard';
-import AdminDashboard from '@/components/dashboard/AdminDashboard';
-import LearningPathFooter from '@/components/dashboard/LearningPathFooter';
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Sparkles, Zap, Target, Trophy } from 'lucide-react';
+
+const OverviewTab = lazy(() => import('@/components/dashboard/OverviewTab'));
+const ProgressTab = lazy(() => import('@/components/dashboard/ProgressTab'));
+const NotificationsTab = lazy(() => import('@/components/dashboard/NotificationsTab'));
+const StudentDashboard = lazy(() => import('@/components/dashboard/StudentDashboard'));
+const InstructorDashboard = lazy(() => import('@/components/dashboard/InstructorDashboard'));
+const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard'));
+const LearningPathFooter = lazy(() => import('@/components/dashboard/LearningPathFooter'));
 
 const Dashboard: React.FC = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -110,11 +111,15 @@ const Dashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {userData?.role === 'student' && <StudentDashboard />}
-      {userData?.role === 'instructor' && <InstructorDashboard />}
-      {userData?.role === 'admin' && <AdminDashboard />}
+      <Suspense fallback={<div>Loading dashboard content...</div>}>
+        {userData?.role === 'student' && <StudentDashboard />}
+        {userData?.role === 'instructor' && <InstructorDashboard />}
+        {userData?.role === 'admin' && <AdminDashboard />}
+      </Suspense>
 
-      <LearningPathFooter />
+      <Suspense fallback={<div>Loading learning path...</div>}>
+        <LearningPathFooter />
+      </Suspense>
     </div>
   );
 };
