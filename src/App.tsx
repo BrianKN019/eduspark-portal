@@ -7,7 +7,11 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import LiveClasses from "./pages/LiveClasses";
+import Analytics from "./pages/Analytics";
+import Calendar from "./pages/Calendar";
+import Discussions from "./pages/Discussions";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
@@ -24,7 +28,11 @@ const App = () => (
               <Route index element={<Dashboard />} />
               <Route path="courses" element={<Courses />} />
               <Route path="live-classes" element={<LiveClasses />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="discussions" element={<Discussions />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </BrowserRouter>
