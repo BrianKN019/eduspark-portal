@@ -44,4 +44,14 @@ export const updateUserSettings = async (settings) => {
   return response.data;
 };
 
+export const fetchUserAchievements = async () => {
+  const response = await api.get('/user/achievements');
+  return response.data;
+};
+
+export const fetchLeaderboard = async () => {
+  const response = await api.get('/leaderboard');
+  return response.data;
+};
+
 export default api;
