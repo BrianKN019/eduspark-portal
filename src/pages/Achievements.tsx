@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, Trophy, Share2, Certificate } from 'lucide-react';
+import { Award, Trophy, Share2, Scroll } from 'lucide-react';
 import BadgeList from '@/components/achievements/BadgeList';
 import Leaderboard from '@/components/achievements/Leaderboard';
 import CertificateList from '@/components/achievements/CertificateList';
@@ -62,7 +62,7 @@ const Achievements: React.FC = () => {
           <Card className="neumorphic-card">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Certificate className="mr-2 h-6 w-6" />
+                <Scroll className="mr-2 h-6 w-6" />
                 Your Certificates
               </CardTitle>
             </CardHeader>
