@@ -54,4 +54,11 @@ export const fetchLeaderboard = async () => {
   return response.data;
 };
 
+export const fetchResources = async (searchTerm: string, category: string) => {
+  const response = await api.get('/resources', {
+    params: { searchTerm, category },
+  });
+  return response.data;
+};
+
 export default api;

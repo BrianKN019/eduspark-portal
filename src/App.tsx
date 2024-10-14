@@ -16,7 +16,7 @@ import Login from "./pages/Login";
 import Achievements from "./pages/Achievements";
 import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
-import Resources from "./pages/Resources";
+import ResourceLibrary from "./pages/ResourceLibrary";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const App = () => (
               <Route path="achievements" element={<Achievements />} />
               <Route path="learning-paths" element={<LearningPaths />} />
               <Route path="community" element={<Community />} />
-              <Route path="resources" element={<Resources />} />
+              <Route path="resource-library" element={<ResourceLibrary />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
             </Route>
