@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, Trophy, Share2, Scroll } from 'lucide-react';
+import { Award, Trophy, Share2, Scroll, Star, Zap, Book, Target } from 'lucide-react';
 import BadgeList from '@/components/achievements/BadgeList';
 import Leaderboard from '@/components/achievements/Leaderboard';
 import CertificateList from '@/components/achievements/CertificateList';
@@ -31,6 +31,7 @@ const Achievements: React.FC = () => {
           <TabsTrigger value="badges">Badges</TabsTrigger>
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           <TabsTrigger value="certificates">Certificates</TabsTrigger>
+          <TabsTrigger value="milestones">Milestones</TabsTrigger>
         </TabsList>
         <TabsContent value="badges">
           <Card className="neumorphic-card">
@@ -71,9 +72,39 @@ const Achievements: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="milestones">
+          <Card className="neumorphic-card">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Target className="mr-2 h-6 w-6" />
+                Learning Milestones
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <MilestoneCard icon={<Book className="h-8 w-8" />} title="Courses Completed" value={userAchievements?.coursesCompleted || 0} />
+                <MilestoneCard icon={<Zap className="h-8 w-8" />} title="Streak Days" value={userAchievements?.streakDays || 0} />
+                <MilestoneCard icon={<Star className="h-8 w-8" />} title="Total Points" value={userAchievements?.totalPoints || 0} />
+                <MilestoneCard icon={<Share2 className="h-8 w-8" />} title="Contributions" value={userAchievements?.contributions || 0} />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
 };
+
+const MilestoneCard: React.FC<{ icon: React.ReactNode; title: string; value: number }> = ({ icon, title, value }) => (
+  <Card className="neumorphic-card">
+    <CardContent className="flex items-center p-4">
+      <div className="mr-4">{icon}</div>
+      <div>
+        <h3 className="font-semibold">{title}</h3>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default Achievements;

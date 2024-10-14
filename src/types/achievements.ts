@@ -4,6 +4,7 @@ export interface Badge {
   description: string;
   imageUrl: string;
   tier: 'bronze' | 'silver' | 'gold';
+  category: 'course' | 'achievement' | 'streak' | 'milestone';
 }
 
 export interface Certificate {
@@ -19,4 +20,13 @@ export interface LeaderboardEntry {
   username: string;
   badgeCount: number;
   points: number;
+}
+
+export interface UserAchievements {
+  badges: Badge[];
+  certificates: Certificate[];
+  coursesCompleted: number;
+  streakDays: number;
+  totalPoints: number;
+  contributions: number;
 }
