@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, MessageSquare, Video, FileText, Award, Search } from 'lucide-react';
+import { Users, MessageSquare, Video, FileText, Award, Search, Zap, Globe, Lightbulb, Rocket } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,17 +10,17 @@ const Community: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [forumPosts, setForumPosts] = useState([
-    { id: 1, title: 'How to optimize React performance?', likes: 42, dislikes: 3 },
-    { id: 2, title: 'Best practices for state management', likes: 38, dislikes: 1 },
-    { id: 3, title: 'Tips for acing coding interviews', likes: 55, dislikes: 2 },
+    { id: 1, title: 'How to optimize React performance?', likes: 42, dislikes: 3, author: 'ReactMaster', tags: ['react', 'performance'] },
+    { id: 2, title: 'Best practices for state management', likes: 38, dislikes: 1, author: 'ReduxGuru', tags: ['react', 'state-management'] },
+    { id: 3, title: 'Tips for acing coding interviews', likes: 55, dislikes: 2, author: 'InterviewAce', tags: ['career', 'interviews'] },
   ]);
 
   useEffect(() => {
     // Simulating API call to fetch forum posts
     const filteredPosts = [
-      { id: 1, title: 'How to optimize React performance?', likes: 42, dislikes: 3 },
-      { id: 2, title: 'Best practices for state management', likes: 38, dislikes: 1 },
-      { id: 3, title: 'Tips for acing coding interviews', likes: 55, dislikes: 2 },
+      { id: 1, title: 'How to optimize React performance?', likes: 42, dislikes: 3, author: 'ReactMaster', tags: ['react', 'performance'] },
+      { id: 2, title: 'Best practices for state management', likes: 38, dislikes: 1, author: 'ReduxGuru', tags: ['react', 'state-management'] },
+      { id: 3, title: 'Tips for acing coding interviews', likes: 55, dislikes: 2, author: 'InterviewAce', tags: ['career', 'interviews'] },
     ].filter(post => post.title.toLowerCase().includes(searchTerm.toLowerCase()));
     setForumPosts(filteredPosts);
   }, [searchTerm]);
@@ -44,6 +44,8 @@ const Community: React.FC = () => {
           <TabsTrigger value="chat">Real-Time Chat</TabsTrigger>
           <TabsTrigger value="studyGroups">Study Groups</TabsTrigger>
           <TabsTrigger value="askExpert">Ask an Expert</TabsTrigger>
+          <TabsTrigger value="challenges">Coding Challenges</TabsTrigger>
+          <TabsTrigger value="events">Community Events</TabsTrigger>
         </TabsList>
         <TabsContent value="forums">
           <Card className="neumorphic-card">
@@ -58,6 +60,7 @@ const Community: React.FC = () => {
                 <Button onClick={() => setSelectedTopic('general')} variant={selectedTopic === 'general' ? 'default' : 'outline'}>General</Button>
                 <Button onClick={() => setSelectedTopic('javascript')} variant={selectedTopic === 'javascript' ? 'default' : 'outline'}>#JavaScript</Button>
                 <Button onClick={() => setSelectedTopic('examprep')} variant={selectedTopic === 'examprep' ? 'default' : 'outline'}>#ExamPrep</Button>
+                <Button onClick={() => setSelectedTopic('machinelearning')} variant={selectedTopic === 'machinelearning' ? 'default' : 'outline'}>#MachineLearning</Button>
               </div>
               <div className="relative mb-4">
                 <Input
@@ -79,7 +82,15 @@ const Community: React.FC = () => {
                       transition={{ duration: 0.3 }}
                       className="flex items-center justify-between p-2 bg-secondary rounded-md"
                     >
-                      <span>{post.title}</span>
+                      <div>
+                        <span className="font-semibold">{post.title}</span>
+                        <p className="text-sm text-gray-500">by {post.author}</p>
+                        <div className="flex mt-1 space-x-1">
+                          {post.tags.map(tag => (
+                            <span key={tag} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
                       <div className="flex items-center space-x-2">
                         <Button size="sm" variant="ghost" onClick={() => handleVote(post.id, 'like')}>👍 {post.likes}</Button>
                         <Button size="sm" variant="ghost" onClick={() => handleVote(post.id, 'dislike')}>👎 {post.dislikes}</Button>
@@ -100,7 +111,7 @@ const Community: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Chat functionality coming soon...</p>
+              <p>Interactive chat rooms coming soon! Connect with peers in real-time.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -113,7 +124,7 @@ const Community: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Study group features coming soon...</p>
+              <p>Join or create study groups for collaborative learning experiences.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -126,7 +137,33 @@ const Community: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Expert Q&A sessions coming soon...</p>
+              <p>Schedule one-on-one sessions with industry experts and mentors.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="challenges">
+          <Card className="neumorphic-card">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Zap className="mr-2 h-6 w-6" />
+                Coding Challenges
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Test your skills with daily coding challenges and compete with peers!</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="events">
+          <Card className="neumorphic-card">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Globe className="mr-2 h-6 w-6" />
+                Community Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Discover and participate in virtual meetups, webinars, and hackathons.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -144,7 +181,14 @@ const Community: React.FC = () => {
               <span>Introduction to React Hooks</span>
               <Button size="sm">View</Button>
             </li>
-            {/* Add more resources here */}
+            <li className="flex items-center justify-between p-2 bg-secondary rounded-md">
+              <span>Machine Learning Fundamentals</span>
+              <Button size="sm">View</Button>
+            </li>
+            <li className="flex items-center justify-between p-2 bg-secondary rounded-md">
+              <span>Cybersecurity Best Practices</span>
+              <Button size="sm">View</Button>
+            </li>
           </ul>
         </CardContent>
       </Card>
@@ -161,8 +205,39 @@ const Community: React.FC = () => {
               <span>1. John Doe</span>
               <span>1250 points</span>
             </li>
-            {/* Add more leaderboard entries here */}
+            <li className="flex items-center justify-between p-2 bg-secondary rounded-md">
+              <span>2. Jane Smith</span>
+              <span>1180 points</span>
+            </li>
+            <li className="flex items-center justify-between p-2 bg-secondary rounded-md">
+              <span>3. Alex Johnson</span>
+              <span>1050 points</span>
+            </li>
           </ul>
+        </CardContent>
+      </Card>
+      <Card className="neumorphic-card">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Lightbulb className="mr-2 h-6 w-6" />
+            Innovation Corner
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Share your innovative ideas and get feedback from the community!</p>
+          <Button className="mt-2">Submit Idea</Button>
+        </CardContent>
+      </Card>
+      <Card className="neumorphic-card">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Rocket className="mr-2 h-6 w-6" />
+            Community Projects
+          </Title>
+        </CardHeader>
+        <CardContent>
+          <p>Collaborate on open-source projects and build your portfolio.</p>
+          <Button className="mt-2">Explore Projects</Button>
         </CardContent>
       </Card>
     </div>

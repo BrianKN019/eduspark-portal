@@ -21,14 +21,19 @@ Welcome to our cutting-edge Learning Management System! This project combines th
 - Upcoming events and deadlines
 
 ### 📚 Course Management
-- Intuitive course creation and editing
+- Diverse catalog of 20+ courses across various fields
+- Courses categorized by difficulty level (Beginner, Intermediate, Advanced)
 - Rich media integration (video, audio, quizzes)
 - Progress tracking and analytics
 
-### 💬 Discussion Forums
+### 💬 Community & Forums
 - Threaded discussions with nested replies
 - Real-time chat integration
-- @mentions and notifications
+- Study groups and collaborative learning
+- Ask an Expert feature for personalized guidance
+- Coding challenges and community events
+- Innovation corner for idea sharing
+- Community-driven open-source projects
 
 ### 🗺 Learning Paths
 - Personalized learning journeys
@@ -75,6 +80,7 @@ advanced-lms/
 │   ├── pages/
 │   │   ├── Dashboard.tsx
 │   │   ├── Courses.tsx
+│   │   ├── Community.tsx
 │   │   └── ...
 │   ├── hooks/
 │   ├── utils/
