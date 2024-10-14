@@ -76,43 +76,15 @@
 }
 
 @layer components {
-  .neumorphic-container {
-    @apply bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg;
-  }
-
   .neumorphic-card {
-    @apply bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-[5px_5px_15px_rgba(0,0,0,0.1),-5px_-5px_15px_rgba(255,255,255,0.1)] dark:shadow-[5px_5px_15px_rgba(0,0,0,0.3),-5px_-5px_15px_rgba(255,255,255,0.05)];
   }
 
   .neumorphic-button {
-    @apply bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-[3px_3px_6px_rgba(0,0,0,0.1),-3px_-3px_6px_rgba(255,255,255,0.1)] dark:shadow-[3px_3px_6px_rgba(0,0,0,0.2),-3px_-3px_6px_rgba(255,255,255,0.05)] hover:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.1),inset_-3px_-3px_6px_rgba(255,255,255,0.1)] dark:hover:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.2),inset_-3px_-3px_6px_rgba(255,255,255,0.05)] transition-shadow duration-300;
   }
 
   .neumorphic-input {
-    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
-  }
-
-  .neumorphic-select {
-    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
-  }
-
-  .neumorphic-checkbox {
-    @apply h-5 w-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600;
-  }
-
-  .neumorphic-sidebar {
-    @apply bg-gray-100 dark:bg-gray-800 shadow-lg;
-  }
-
-  .neumorphic-avatar {
-    @apply bg-gray-200 dark:bg-gray-700 rounded-full shadow-md;
-  }
-
-  .neumorphic-tabs {
-    @apply bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-inner;
-  }
-
-  .neumorphic-progress {
-    @apply bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner;
+    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none shadow-[inset_3px_3px_6px_rgba(0,0,0,0.1),inset_-3px_-3px_6px_rgba(255,255,255,0.1)] dark:shadow-[inset_3px_3px_6px_rgba(0,0,0,0.2),inset_-3px_-3px_6px_rgba(255,255,255,0.05)];
   }
 }
