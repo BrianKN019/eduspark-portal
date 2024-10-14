@@ -1,11 +1,13 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Sparkles, Zap, Target, Trophy } from 'lucide-react';
+import { Sparkles, Zap, Target, Trophy, Sun, Moon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Switch } from "@/components/ui/switch";
 
 const OverviewTab = lazy(() => import('@/components/dashboard/OverviewTab'));
 const ProgressTab = lazy(() => import('@/components/dashboard/ProgressTab'));
@@ -16,6 +18,9 @@ const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard'
 const LearningPathFooter = lazy(() => import('@/components/dashboard/LearningPathFooter'));
 
 const Dashboard: React.FC = () => {
+  const [theme, setTheme] = useState('light');
+  const [particles, setParticles] = useState([]);
+
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userData'],
     queryFn: fetchUserData,
@@ -26,20 +31,75 @@ const Dashboard: React.FC = () => {
     queryFn: fetchWeeklyProgress,
   });
 
+  useEffect(() => {
+    const generateParticles = () => {
+      return Array.from({ length: 50 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size: Math.random() * 5 + 1,
+        speedX: Math.random() * 3 - 1.5,
+        speedY: Math.random() * 3 - 1.5,
+      }));
+    };
+
+    setParticles(generateParticles());
+
+    const interval = setInterval(() => {
+      setParticles(prevParticles =>
+        prevParticles.map(particle => ({
+          ...particle,
+          x: (particle.x + particle.speedX + window.innerWidth) % window.innerWidth,
+          y: (particle.y + particle.speedY + window.innerHeight) % window.innerHeight,
+        }))
+      );
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (userLoading || progressLoading) {
     return <div>Loading...</div>;
   }
 
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-indigo-900">
-      <div className="flex justify-between items-center">
+    <div className={`space-y-6 p-6 min-h-screen relative overflow-hidden transition-colors duration-500 ${theme === 'light' ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-gradient-to-r from-gray-900 to-indigo-900 text-white'}`}>
+      {particles.map((particle, index) => (
+        <motion.div
+          key={index}
+          className="absolute rounded-full bg-blue-500 opacity-20"
+          style={{
+            x: particle.x,
+            y: particle.y,
+            width: particle.size,
+            height: particle.size,
+          }}
+          animate={{
+            x: [particle.x, (particle.x + particle.speedX * 100 + window.innerWidth) % window.innerWidth],
+            y: [particle.y, (particle.y + particle.speedY * 100 + window.innerHeight) % window.innerHeight],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+      ))}
+      <div className="flex justify-between items-center relative z-10">
         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
           Welcome back, {userData?.name}!
         </h2>
-        <Avatar className="h-12 w-12 ring-2 ring-purple-500 ring-offset-2">
-          <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${userData?.name}`} alt={userData?.name} />
-          <AvatarFallback>{userData?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-        </Avatar>
+        <div className="flex items-center space-x-4">
+          <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+          {theme === 'light' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+          <Avatar className="h-12 w-12 ring-2 ring-purple-500 ring-offset-2">
+            <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${userData?.name}`} alt={userData?.name} />
+            <AvatarFallback>{userData?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+          </Avatar>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
