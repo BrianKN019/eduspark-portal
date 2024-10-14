@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Plus, X, Tag, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, X, Tag, Clock, ChevronLeft, ChevronRight, Sun, Moon, Cloud, Zap } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import FullCalendar from '@fullcalendar/react';
@@ -51,20 +51,18 @@ const Calendar: React.FC = () => {
 
   const getPriorityIcon = (priority: 'low' | 'medium' | 'high') => {
     switch (priority) {
-      case 'low': return '⬇️';
-      case 'medium': return '➡️';
-      case 'high': return '⬆️';
-      default: return '';
+      case 'low': return <Cloud className="h-4 w-4 text-blue-400" />;
+      case 'medium': return <Sun className="h-4 w-4 text-yellow-400" />;
+      case 'high': return <Zap className="h-4 w-4 text-red-400" />;
+      default: return null;
     }
   };
 
   const handleDateClick = (arg: any) => {
-    // Handle date click in FullCalendar
     setSelectedDate(arg.date);
   };
 
   const handleEventDrop = (arg: any) => {
-    // Handle event drag and drop in FullCalendar
     const updatedTodos = todos.map(todo =>
       todo.id === parseInt(arg.event.id) ? { ...todo, date: arg.event.start } : todo
     );
@@ -73,7 +71,7 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-indigo-900 min-h-screen">
-      <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Calendar & To-Do List</h2>
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Interactive Calendar & Task Manager</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 neumorphic-card overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
@@ -81,7 +79,7 @@ const Calendar: React.FC = () => {
               <Button variant="ghost" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                 <ChevronLeft className="h-6 w-6" />
               </Button>
-              <CardTitle>{format(currentMonth, 'MMMM yyyy')}</CardTitle>
+              <CardTitle className="text-2xl font-bold">{format(currentMonth, 'MMMM yyyy')}</CardTitle>
               <Button variant="ghost" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                 <ChevronRight className="h-6 w-6" />
               </Button>
@@ -111,11 +109,11 @@ const Calendar: React.FC = () => {
               dateClick={handleDateClick}
               eventDrop={handleEventDrop}
               eventContent={(eventInfo) => (
-                <div className="flex items-center p-1">
+                <div className="flex items-center p-1 rounded-lg shadow-sm" style={{ backgroundColor: eventInfo.event.backgroundColor }}>
                   <span className="mr-1">{getPriorityIcon(eventInfo.event.extendedProps.priority)}</span>
-                  <span>{eventInfo.event.title}</span>
+                  <span className="font-medium text-white">{eventInfo.event.title}</span>
                   {eventInfo.event.extendedProps.tag && (
-                    <span className="ml-1 text-xs bg-gray-200 dark:bg-gray-700 rounded px-1">
+                    <span className="ml-1 text-xs bg-white bg-opacity-30 rounded px-1">
                       {eventInfo.event.extendedProps.tag}
                     </span>
                   )}
@@ -124,94 +122,96 @@ const Calendar: React.FC = () => {
             />
           </CardContent>
         </Card>
-        <Card className="neumorphic-card">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Task
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="text"
-                placeholder="New todo"
-                value={newTodo}
-                onChange={(e) => setNewTodo(e.target.value)}
-                className="w-full"
-              />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                type="text"
-                placeholder="Tag"
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
-                className="w-full"
-              />
-              <div className="flex space-x-2">
+        <div className="space-y-6">
+          <Card className="neumorphic-card">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Plus className="mr-2 h-5 w-5" />
+                Create New Task
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 <Input
-                  type="color"
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  className="w-12 h-10 p-1"
+                  type="text"
+                  placeholder="Task description"
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  className="w-full"
                 />
-                <select
-                  value={selectedPriority}
-                  onChange={(e) => setSelectedPriority(e.target.value as 'low' | 'medium' | 'high')}
-                  className="flex-grow border rounded p-2"
-                >
-                  <option value="low">Low Priority</option>
-                  <option value="medium">Medium Priority</option>
-                  <option value="high">High Priority</option>
-                </select>
-              </div>
-              <Button onClick={addTodo} className="w-full">
-                Add Task
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      <Card className="neumorphic-card mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Clock className="mr-2 h-4 w-4" />
-            To-Do List
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {todos.map(todo => (
-              <li key={todo.id} className="flex items-center justify-between p-2 rounded" style={{ backgroundColor: `${todo.color}20` }}>
-                <div className="flex items-center space-x-2">
-                  <span>{getPriorityIcon(todo.priority)}</span>
-                  <span className="font-medium">{todo.text}</span>
-                  <span className="text-sm text-gray-500">{format(todo.date, 'PPP')}</span>
-                  {todo.tag && <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs">{todo.tag}</span>}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, 'PPP') : <span>Select date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Input
+                  type="text"
+                  placeholder="Add tag"
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  className="w-full"
+                />
+                <div className="flex space-x-2">
+                  <Input
+                    type="color"
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-12 h-10 p-1"
+                  />
+                  <select
+                    value={selectedPriority}
+                    onChange={(e) => setSelectedPriority(e.target.value as 'low' | 'medium' | 'high')}
+                    className="flex-grow border rounded p-2"
+                  >
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                  </select>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => removeTodo(todo.id)}>
-                  <X className="h-4 w-4" />
+                <Button onClick={addTodo} className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white">
+                  Add Task
                 </Button>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="neumorphic-card">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Clock className="mr-2 h-5 w-5" />
+                Task List
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 max-h-96 overflow-y-auto">
+                {todos.map(todo => (
+                  <li key={todo.id} className="flex items-center justify-between p-2 rounded-lg shadow-sm transition-all hover:shadow-md" style={{ backgroundColor: `${todo.color}20` }}>
+                    <div className="flex items-center space-x-2">
+                      {getPriorityIcon(todo.priority)}
+                      <span className="font-medium">{todo.text}</span>
+                      <span className="text-sm text-gray-500">{format(todo.date, 'MMM d')}</span>
+                      {todo.tag && <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs">{todo.tag}</span>}
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => removeTodo(todo.id)} className="hover:bg-red-100 dark:hover:bg-red-900">
+                      <X className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

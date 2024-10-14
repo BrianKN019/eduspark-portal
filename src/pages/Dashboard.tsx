@@ -12,6 +12,7 @@ import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import LearningPathFooter from '@/components/dashboard/LearningPathFooter';
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Sparkles, Zap, Target, Trophy } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -40,6 +41,37 @@ const Dashboard: React.FC = () => {
         </Avatar>
       </div>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="neumorphic-card bg-gradient-to-br from-blue-400 to-blue-600 text-white">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Sparkles className="h-8 w-8 mb-2" />
+            <h3 className="text-xl font-semibold">Learning Streak</h3>
+            <p className="text-3xl font-bold">{userData?.learningStreak} days</p>
+          </CardContent>
+        </Card>
+        <Card className="neumorphic-card bg-gradient-to-br from-green-400 to-green-600 text-white">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Zap className="h-8 w-8 mb-2" />
+            <h3 className="text-xl font-semibold">XP Gained</h3>
+            <p className="text-3xl font-bold">{userData?.xpGained} XP</p>
+          </CardContent>
+        </Card>
+        <Card className="neumorphic-card bg-gradient-to-br from-yellow-400 to-yellow-600 text-white">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Target className="h-8 w-8 mb-2" />
+            <h3 className="text-xl font-semibold">Goals Completed</h3>
+            <p className="text-3xl font-bold">{userData?.goalsCompleted}</p>
+          </CardContent>
+        </Card>
+        <Card className="neumorphic-card bg-gradient-to-br from-purple-400 to-purple-600 text-white">
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <Trophy className="h-8 w-8 mb-2" />
+            <h3 className="text-xl font-semibold">Achievements</h3>
+            <p className="text-3xl font-bold">{userData?.achievements}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="overflow-hidden shadow-lg">
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900">
