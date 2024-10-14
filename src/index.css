@@ -66,26 +66,20 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
 @layer components {
   .neumorphic-container {
-    @apply bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg;
+    @apply bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg p-6;
+    box-shadow: 20px 20px 60px #d1d1d1, -20px -20px 60px #ffffff;
   }
 
   .neumorphic-card {
-    @apply bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+    @apply bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4;
+    box-shadow: 5px 5px 15px #d1d1d1, -5px -5px 15px #ffffff;
   }
 
   .neumorphic-button {
     @apply bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+    box-shadow: 3px 3px 6px #b8b9be, -3px -3px 6px #ffffff;
   }
 
   .neumorphic-input {
@@ -115,4 +109,5 @@
   .neumorphic-progress {
     @apply bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner;
   }
+}
 }
