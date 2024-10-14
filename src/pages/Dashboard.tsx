@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
