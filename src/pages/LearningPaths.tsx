@@ -6,10 +6,21 @@ import { Map, Award, BookOpen, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 
+interface UserSkills {
+  [key: string]: number;
+}
+
+interface LearningPath {
+  id: number;
+  name: string;
+  progress: number;
+  courses: string[];
+}
+
 const LearningPaths: React.FC = () => {
-  const [userSkills, setUserSkills] = useState({});
-  const [learningPaths, setLearningPaths] = useState([]);
-  const [selectedPath, setSelectedPath] = useState(null);
+  const [userSkills, setUserSkills] = useState<UserSkills>({});
+  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
+  const [selectedPath, setSelectedPath] = useState<LearningPath | null>(null);
 
   useEffect(() => {
     // Simulated API calls
@@ -34,6 +45,8 @@ const LearningPaths: React.FC = () => {
   }, [selectedPath]);
 
   const renderRoadmap = () => {
+    if (!selectedPath) return;
+
     const svg = d3.select("#roadmap");
     svg.selectAll("*").remove();
 
