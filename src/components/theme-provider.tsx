@@ -8,8 +8,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>
 }
 
+type ThemeProviderContext = { theme?: string; setTheme?: (theme: string) => void }
+
 export const useTheme = () => {
-  const context = React.useContext(NextThemesProvider as React.Context<{ theme?: string; setTheme?: (theme: string) => void }>)
+  const context = React.useContext(React.createContext<ThemeProviderContext>({}))
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider')
   }
