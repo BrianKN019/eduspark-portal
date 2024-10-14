@@ -61,4 +61,11 @@ export const fetchResources = async (searchTerm: string, category: string) => {
   return response.data;
 };
 
+export const fetchCourses = async (searchTerm: string, category: string) => {
+  const response = await api.get('/courses', {
+    params: { searchTerm, category },
+  });
+  return response.data;
+};
+
 export default api;
