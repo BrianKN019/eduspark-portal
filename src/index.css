@@ -76,18 +76,43 @@
 }
 
 @layer components {
+  .neumorphic-container {
+    @apply bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg;
+  }
+
   .neumorphic-card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg transition-all duration-300;
-    box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.1), -8px -8px 15px rgba(255, 255, 255, 0.5);
+    @apply bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
   }
 
   .neumorphic-button {
-    @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
-    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.5);
+    @apply bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
   }
 
   .neumorphic-input {
     @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+  }
+
+  .neumorphic-select {
+    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
+  }
+
+  .neumorphic-checkbox {
+    @apply h-5 w-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600;
+  }
+
+  .neumorphic-sidebar {
+    @apply bg-gray-100 dark:bg-gray-800 shadow-lg;
+  }
+
+  .neumorphic-avatar {
+    @apply bg-gray-200 dark:bg-gray-700 rounded-full shadow-md;
+  }
+
+  .neumorphic-tabs {
+    @apply bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-inner;
+  }
+
+  .neumorphic-progress {
+    @apply bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner;
   }
 }

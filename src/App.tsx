@@ -17,29 +17,14 @@ import Achievements from "./pages/Achievements";
 import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
-import { motion } from "framer-motion";
 
 const queryClient = new QueryClient();
-
-const AnimatedBackground = () => (
-  <motion.div
-    className="fixed inset-0 z-[-1]"
-    initial={{ backgroundPosition: "0% 0%" }}
-    animate={{ backgroundPosition: "100% 100%" }}
-    transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-    style={{
-      background: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%)",
-      backgroundSize: "400% 400%",
-    }}
-  />
-);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider>
         <Toaster />
-        <AnimatedBackground />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
