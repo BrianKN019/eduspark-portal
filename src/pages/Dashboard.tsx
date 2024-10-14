@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import NotificationsTab from '@/components/dashboard/NotificationsTab';
 import StudentDashboard from '@/components/dashboard/StudentDashboard';
 import InstructorDashboard from '@/components/dashboard/InstructorDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
+import LearningPathFooter from '@/components/dashboard/LearningPathFooter';
 
 const Dashboard: React.FC = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
@@ -41,20 +42,24 @@ const Dashboard: React.FC = () => {
           <TabsTrigger value="progress">Progress</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview">
-          <OverviewTab userData={userData} />
-        </TabsContent>
-        <TabsContent value="progress">
-          <ProgressTab weeklyProgressData={weeklyProgressData} />
-        </TabsContent>
-        <TabsContent value="notifications">
-          <NotificationsTab />
-        </TabsContent>
+        <Suspense fallback={<div>Loading tab content...</div>}>
+          <TabsContent value="overview">
+            <OverviewTab userData={userData} />
+          </TabsContent>
+          <TabsContent value="progress">
+            <ProgressTab weeklyProgressData={weeklyProgressData} />
+          </TabsContent>
+          <TabsContent value="notifications">
+            <NotificationsTab />
+          </TabsContent>
+        </Suspense>
       </Tabs>
 
       {userData?.role === 'student' && <StudentDashboard />}
       {userData?.role === 'instructor' && <InstructorDashboard />}
       {userData?.role === 'admin' && <AdminDashboard />}
+
+      <LearningPathFooter />
     </div>
   );
 };
