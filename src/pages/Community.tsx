@@ -233,7 +233,7 @@ const Community: React.FC = () => {
           <CardTitle className="flex items-center">
             <Rocket className="mr-2 h-6 w-6" />
             Community Projects
-          </Title>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p>Collaborate on open-source projects and build your portfolio.</p>
