@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings, Award, Map, Users, Library } from 'lucide-react';
+import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings, Award, Map, Users, Library, Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Sidebar: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/courses', icon: BookOpen, label: 'Courses' },
@@ -18,30 +21,45 @@ const Sidebar: React.FC = () => {
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
-    <aside className="bg-card text-card-foreground w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out neumorphic-sidebar">
-      <nav>
-        <ul className="space-y-2">
-          {navItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center space-x-2 px-4 py-3 rounded transition duration-200 ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground neumorphic-active'
-                      : 'hover:bg-accent hover:text-accent-foreground neumorphic-hover'
-                  }`
-                }
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+    <>
+      <Button
+        className="fixed top-4 left-4 z-50 md:hidden"
+        onClick={toggleMobileMenu}
+        size="icon"
+        variant="outline"
+      >
+        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
+      <aside className={`bg-card text-card-foreground w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out neumorphic-sidebar z-40`}>
+        <nav>
+          <ul className="space-y-2">
+            {navItems.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center space-x-2 px-4 py-3 rounded transition duration-200 ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground neumorphic-active'
+                        : 'hover:bg-accent hover:text-accent-foreground neumorphic-hover'
+                    }`
+                  }
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+    </>
   );
 };
 
