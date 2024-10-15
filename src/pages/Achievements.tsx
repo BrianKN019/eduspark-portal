@@ -27,7 +27,8 @@ const Achievements: React.FC = () => {
   // Ensure that the badges are of the correct type
   const typedBadges: Badge[] = userAchievements?.badges.map(badge => ({
     ...badge,
-    tier: badge.tier as 'bronze' | 'silver' | 'gold'
+    tier: badge.tier as 'bronze' | 'silver' | 'gold',
+    category: badge.category as 'course' | 'achievement' | 'streak' | 'milestone'
   })) || [];
 
   return (
