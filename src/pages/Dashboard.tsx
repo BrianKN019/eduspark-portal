@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
 
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userData'],
-    queryFn: fetchUserData,
+    queryFn: () => fetchUserData('Brian K'), // Pass the name here
   });
 
   const { data: weeklyProgressData, isLoading: progressLoading } = useQuery({
@@ -98,14 +98,14 @@ const Dashboard: React.FC = () => {
       ))}
       <div className="flex justify-between items-center relative z-10">
         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
-          Welcome back, {userData?.name}!
+          Welcome back, Brian K!
         </h2>
         <div className="flex items-center space-x-4">
           <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
           {theme === 'light' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
           <Avatar className="h-12 w-12 ring-2 ring-purple-500 ring-offset-2">
-            <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=${userData?.name}`} alt={userData?.name} />
-            <AvatarFallback>{userData?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            <AvatarImage src={`https://api.dicebear.com/6.x/initials/svg?seed=BK`} alt="Brian K" />
+            <AvatarFallback>BK</AvatarFallback>
           </Avatar>
         </div>
       </div>
