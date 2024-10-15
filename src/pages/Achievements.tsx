@@ -7,6 +7,7 @@ import Leaderboard from '@/components/achievements/Leaderboard';
 import CertificateList from '@/components/achievements/CertificateList';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserAchievements, fetchLeaderboard } from '@/lib/api';
+import { Badge } from '@/types/achievements';
 
 const Achievements: React.FC = () => {
   const { data: userAchievements, isLoading: achievementsLoading } = useQuery({
@@ -22,6 +23,12 @@ const Achievements: React.FC = () => {
   if (achievementsLoading || leaderboardLoading) {
     return <div>Loading achievements...</div>;
   }
+
+  // Ensure that the badges are of the correct type
+  const typedBadges: Badge[] = userAchievements?.badges.map(badge => ({
+    ...badge,
+    tier: badge.tier as 'bronze' | 'silver' | 'gold'
+  })) || [];
 
   return (
     <div className="space-y-6 p-6">
@@ -42,7 +49,7 @@ const Achievements: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <BadgeList badges={userAchievements?.badges || []} />
+              <BadgeList badges={typedBadges} />
             </CardContent>
           </Card>
         </TabsContent>
