@@ -6,10 +6,10 @@ import { User, Mail, Phone, MapPin, Briefcase, Book } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const userProfile = {
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: "Brian K",
+    email: "brian.k@example.com",
     phone: "+1 234 567 8900",
-    location: "New York, USA",
+    location: "Nairobi,  Kenya",
     occupation: "Software Developer",
     bio: "Passionate about learning and technology. Always eager to take on new challenges and expand my skillset.",
     courses: ["React Fundamentals", "Advanced JavaScript", "Node.js Basics"],
