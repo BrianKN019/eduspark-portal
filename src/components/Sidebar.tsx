@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings, Award, Map, Users, Library, Menu, X } from 'lucide-react';
+import { Home, BookOpen, Video, User, BarChart2, Calendar, MessageSquare, Settings, Award, Map, Users, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Sidebar: React.FC = () => {
@@ -33,7 +33,20 @@ const Sidebar: React.FC = () => {
         size="icon"
         variant="outline"
       >
-        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+          />
+        </svg>
       </Button>
       <aside className={`bg-card text-card-foreground w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out neumorphic-sidebar z-40`}>
         <nav>
