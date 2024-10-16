@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Map, Award, BookOpen, CheckCircle } from 'lucide-react';
+import { Map, Award, BookOpen, CheckCircle, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import * as d3 from 'd3';
 
@@ -15,6 +15,8 @@ interface LearningPath {
   name: string;
   progress: number;
   courses: string[];
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  estimatedTime: string;
 }
 
 const LearningPaths: React.FC = () => {
@@ -29,12 +31,16 @@ const LearningPaths: React.FC = () => {
       'React': 40,
       'Node.js': 30,
       'Python': 20,
+      'Data Science': 15,
+      'Machine Learning': 10,
     });
 
     setLearningPaths([
-      { id: 1, name: 'Frontend Developer', progress: 45, courses: ['HTML & CSS Basics', 'JavaScript Fundamentals', 'React Essentials'] },
-      { id: 2, name: 'Backend Developer', progress: 30, courses: ['Node.js Basics', 'Express.js', 'Database Design'] },
-      { id: 3, name: 'Full Stack Developer', progress: 20, courses: ['Frontend Basics', 'Backend Basics', 'Full Stack Projects'] },
+      { id: 1, name: 'Frontend Developer', progress: 45, courses: ['HTML & CSS Basics', 'JavaScript Fundamentals', 'React Essentials', 'Advanced React Patterns', 'Frontend Testing'], difficulty: 'Intermediate', estimatedTime: '3 months' },
+      { id: 2, name: 'Backend Developer', progress: 30, courses: ['Node.js Basics', 'Express.js', 'Database Design', 'API Development', 'Server Security'], difficulty: 'Advanced', estimatedTime: '4 months' },
+      { id: 3, name: 'Full Stack Developer', progress: 20, courses: ['Frontend Basics', 'Backend Basics', 'Full Stack Projects', 'DevOps for Web', 'Advanced Web Security'], difficulty: 'Advanced', estimatedTime: '6 months' },
+      { id: 4, name: 'Data Scientist', progress: 10, courses: ['Python for Data Science', 'Statistics Fundamentals', 'Machine Learning Basics', 'Deep Learning', 'Big Data Analytics'], difficulty: 'Advanced', estimatedTime: '5 months' },
+      { id: 5, name: 'UI/UX Designer', progress: 5, courses: ['Design Principles', 'User Research', 'Wireframing and Prototyping', 'UI Design', 'UX Writing'], difficulty: 'Intermediate', estimatedTime: '3 months' },
     ]);
   }, []);
 
@@ -88,7 +94,7 @@ const LearningPaths: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <h2 className="text-3xl font-bold">Learning Paths</h2>
-      <Card className="neumorphic-card">
+      <Card className="neumorphic-card neumorphic-convex">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Map className="mr-2 h-6 w-6" />
@@ -114,13 +120,14 @@ const LearningPaths: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="neumorphic-card cursor-pointer" onClick={() => setSelectedPath(path)}>
+                <Card className="neumorphic-card neumorphic-convex cursor-pointer" onClick={() => setSelectedPath(path)}>
                   <CardContent className="flex items-center justify-between p-4">
-                    <div>
+                    <div className="flex-grow">
                       <h4 className="font-semibold">{path.name}</h4>
+                      <p className="text-sm text-gray-500">Difficulty: {path.difficulty} | Est. Time: {path.estimatedTime}</p>
                       <Progress value={path.progress} className="w-full mt-2" />
                     </div>
-                    <Button variant="outline">
+                    <Button variant="outline" className="neumorphic-button neumorphic-convex ml-4">
                       {selectedPath?.id === path.id ? 'Selected' : 'Select'}
                     </Button>
                   </CardContent>
@@ -131,7 +138,7 @@ const LearningPaths: React.FC = () => {
         </CardContent>
       </Card>
       {selectedPath && (
-        <Card className="neumorphic-card">
+        <Card className="neumorphic-card neumorphic-convex">
           <CardHeader>
             <CardTitle>{selectedPath.name} Roadmap</CardTitle>
           </CardHeader>
@@ -147,6 +154,16 @@ const LearningPaths: React.FC = () => {
                   </li>
                 ))}
               </ul>
+            </div>
+            <div className="mt-4 flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-500">Difficulty: {selectedPath.difficulty}</p>
+                <p className="text-sm text-gray-500">Estimated Time: {selectedPath.estimatedTime}</p>
+              </div>
+              <Button className="neumorphic-button neumorphic-convex">
+                <Star className="mr-2 h-4 w-4" />
+                Start Learning Path
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -24,7 +24,6 @@ const Achievements: React.FC = () => {
     return <div>Loading achievements...</div>;
   }
 
-  // Ensure that the badges are of the correct type
   const typedBadges: Badge[] = userAchievements?.badges.map(badge => ({
     ...badge,
     tier: badge.tier as 'bronze' | 'silver' | 'gold',
@@ -35,11 +34,11 @@ const Achievements: React.FC = () => {
     <div className="space-y-6 p-6">
       <h2 className="text-3xl font-bold">Achievements & Badges</h2>
       <Tabs defaultValue="badges" className="w-full">
-        <TabsList>
-          <TabsTrigger value="badges">Badges</TabsTrigger>
-          <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones</TabsTrigger>
+        <TabsList className="neumorphic-convex">
+          <TabsTrigger value="badges" className="neumorphic-convex">Badges</TabsTrigger>
+          <TabsTrigger value="leaderboard" className="neumorphic-convex">Leaderboard</TabsTrigger>
+          <TabsTrigger value="certificates" className="neumorphic-convex">Certificates</TabsTrigger>
+          <TabsTrigger value="milestones" className="neumorphic-convex">Milestones</TabsTrigger>
         </TabsList>
         <TabsContent value="badges">
           <Card className="neumorphic-card">
@@ -104,7 +103,7 @@ const Achievements: React.FC = () => {
 };
 
 const MilestoneCard: React.FC<{ icon: React.ReactNode; title: string; value: number }> = ({ icon, title, value }) => (
-  <Card className="neumorphic-card">
+  <Card className="neumorphic-card neumorphic-convex">
     <CardContent className="flex items-center p-4">
       <div className="mr-4">{icon}</div>
       <div>

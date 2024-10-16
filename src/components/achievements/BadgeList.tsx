@@ -10,8 +10,19 @@ interface BadgeListProps {
 
 const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
   const handleShare = (badge: Badge) => {
-    // Implement sharing functionality
-    console.log('Sharing badge:', badge.name);
+    if (navigator.share) {
+      navigator.share({
+        title: `I earned the ${badge.name} badge!`,
+        text: `Check out my ${badge.name} badge on LMS Platform`,
+        url: window.location.href,
+      }).then(() => {
+        console.log('Badge shared successfully');
+      }).catch((error) => {
+        console.log('Error sharing badge:', error);
+      });
+    } else {
+      alert('Web Share API is not supported in your browser. You can manually share your achievement!');
+    }
   };
 
   const getBadgeIcon = (category: string) => {
@@ -32,7 +43,7 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {badges.map((badge) => (
-        <Card key={badge.id} className="neumorphic-card">
+        <Card key={badge.id} className="neumorphic-card neumorphic-convex">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{badge.name}</span>
@@ -46,7 +57,7 @@ const BadgeList: React.FC<BadgeListProps> = ({ badges }) => {
               {getBadgeIcon(badge.category)}
             </div>
             <p className="text-sm text-center mb-4">{badge.description}</p>
-            <Button onClick={() => handleShare(badge)} className="w-full neumorphic-button">
+            <Button onClick={() => handleShare(badge)} className="w-full neumorphic-button neumorphic-convex">
               <Share2 className="mr-2 h-4 w-4" />
               Share Badge
             </Button>

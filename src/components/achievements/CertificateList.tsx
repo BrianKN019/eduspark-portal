@@ -10,21 +10,26 @@ interface CertificateListProps {
 
 const CertificateList: React.FC<CertificateListProps> = ({ certificates }) => {
   const handleDownload = (certificate: Certificate) => {
-    // Implement certificate download functionality
-    console.log('Downloading certificate:', certificate.name);
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = certificate.downloadUrl;
+    link.download = `${certificate.name.replace(/\s+/g, '_')}_Certificate.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
     <div className="space-y-4">
       {certificates.map((certificate) => (
-        <Card key={certificate.id} className="neumorphic-card">
+        <Card key={certificate.id} className="neumorphic-card neumorphic-convex">
           <CardHeader>
             <CardTitle>{certificate.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm mb-4">{certificate.description}</p>
             <p className="text-sm text-gray-500 mb-4">Earned on: {new Date(certificate.earnedDate).toLocaleDateString()}</p>
-            <Button onClick={() => handleDownload(certificate)}>
+            <Button onClick={() => handleDownload(certificate)} className="neumorphic-button neumorphic-convex">
               <Download className="mr-2 h-4 w-4" />
               Download Certificate
             </Button>
