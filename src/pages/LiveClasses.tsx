@@ -5,9 +5,9 @@ import { Video, Calendar, Users } from 'lucide-react';
 
 const LiveClasses: React.FC = () => {
   const upcomingClasses = [
-    { id: 1, title: "Advanced React Patterns", date: "2023-05-15", time: "14:00", instructor: "Jane Doe" },
-    { id: 2, title: "GraphQL Fundamentals", date: "2023-05-17", time: "10:00", instructor: "John Smith" },
-    { id: 3, title: "Machine Learning Basics", date: "2023-05-20", time: "15:30", instructor: "Alice Johnson" },
+    { id: 1, title: "Advanced React Patterns", date: "2024-10-15", time: "14:00", instructor: "Jane Doe" },
+    { id: 2, title: "GraphQL Fundamentals", date: "2024-11-17", time: "10:00", instructor: "John Smith" },
+    { id: 3, title: "Machine Learning Basics", date: "2024-12-20", time: "15:30", instructor: "Alice Johnson" },
   ];
 
   return (
