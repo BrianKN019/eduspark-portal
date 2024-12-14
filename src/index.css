@@ -4,114 +4,120 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --background: 260 85% 98%;
+    --foreground: 240 10% 3.9%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 240 10% 3.9%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    --popover-foreground: 240 10% 3.9%;
+    
+    --primary: 262 83% 58%;
+    --primary-foreground: 355.7 100% 97.3%;
+    
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    
+    --accent: 262 83% 58%;
+    --accent-foreground: 240 5.9% 10%;
+    
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
+    
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 262 83% 58%;
+    --primary-foreground: 355.7 100% 97.3%;
+    
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 98%;
+    
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262 83% 58%;
   }
 }
 
 @layer components {
   .neumorphic-container {
-    @apply bg-gray-100 dark:bg-gray-800 rounded-lg shadow-lg p-6;
-    box-shadow: 20px 20px 60px #d1d1d1, -20px -20px 60px #ffffff;
+    @apply bg-background rounded-lg shadow-lg p-6 transition-all duration-300;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1), -8px -8px 16px rgba(255, 255, 255, 0.7);
   }
 
   .neumorphic-card {
-    @apply bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4;
-    box-shadow: 5px 5px 15px #d1d1d1, -5px -5px 15px #ffffff;
+    @apply bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-4;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 0.7);
   }
 
   .neumorphic-button {
-    @apply bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
-    box-shadow: 3px 3px 6px #b8b9be, -3px -3px 6px #ffffff;
+    @apply bg-primary text-primary-foreground font-semibold py-2 px-4 rounded-lg shadow-md 
+           hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95;
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.7);
   }
 
   .neumorphic-input {
-    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
+    @apply bg-background border-2 border-transparent focus:border-primary rounded-lg px-4 py-2 
+           focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-300;
   }
 
   .neumorphic-select {
-    @apply bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-blue-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-600;
+    @apply bg-background border-2 border-transparent focus:border-primary rounded-lg px-4 py-2 
+           focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-300;
   }
 
   .neumorphic-checkbox {
-    @apply h-5 w-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600;
+    @apply h-5 w-5 text-primary rounded focus:ring-primary/20 focus:ring-2 bg-background 
+           border-muted-foreground/20 transition-all duration-300;
   }
 
   .neumorphic-sidebar {
-    @apply bg-gray-100 dark:bg-gray-800 shadow-lg;
+    @apply bg-background shadow-lg transition-all duration-300;
+    box-shadow: 5px 0 10px rgba(0, 0, 0, 0.1);
   }
 
   .neumorphic-avatar {
-    @apply bg-gray-200 dark:bg-gray-700 rounded-full shadow-md;
+    @apply rounded-full shadow-md transition-all duration-300;
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1), -3px -3px 6px rgba(255, 255, 255, 0.7);
   }
 
   .neumorphic-tabs {
-    @apply bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-inner;
+    @apply bg-muted rounded-lg p-1 shadow-inner transition-all duration-300;
   }
 
   .neumorphic-progress {
-    @apply bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shadow-inner;
+    @apply bg-muted rounded-full overflow-hidden shadow-inner transition-all duration-300;
   }
 
   .neumorphic-convex {
-    @apply relative overflow-hidden;
+    @apply relative overflow-hidden transition-all duration-300;
     &::before {
       content: '';
       position: absolute;
@@ -124,5 +130,35 @@
       z-index: 1;
       pointer-events: none;
     }
+  }
+
+  /* Page Transitions */
+  .page-enter {
+    @apply opacity-0 translate-y-4;
+  }
+  
+  .page-enter-active {
+    @apply opacity-100 translate-y-0 transition-all duration-300 ease-out;
+  }
+  
+  .page-exit {
+    @apply opacity-100 translate-y-0;
+  }
+  
+  .page-exit-active {
+    @apply opacity-0 -translate-y-4 transition-all duration-300 ease-in;
+  }
+
+  /* Interactive Elements */
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .pulse-on-hover {
+    @apply hover:animate-pulse;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 }

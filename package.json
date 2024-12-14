@@ -52,7 +52,7 @@
     "d3": "^7.9.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "framer-motion": "^11.11.8",
+    "framer-motion": "^11.14.4",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.451.0",
     "next-themes": "^0.3.0",
