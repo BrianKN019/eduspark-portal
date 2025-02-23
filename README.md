@@ -1,3 +1,4 @@
+
 # 🚀 Advanced Learning Management System
 
 Welcome to our cutting-edge Learning Management System! This project combines the power of React, TypeScript, and various modern technologies to create an engaging and interactive learning experience.
@@ -101,6 +102,124 @@ graph TD
     D --> C
     C --> B
     B --> F[UI Update]
+```
+
+## 🎨 Theme System
+
+```mermaid
+flowchart LR
+    A[Theme Provider] --> B{Theme Context}
+    B --> C[Light Mode]
+    B --> D[Dark Mode]
+    C --> E[Light Theme Variables]
+    D --> F[Dark Theme Variables]
+    E --> G[Component Styles]
+    F --> G
+```
+
+## 🔄 State Management Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Component
+    participant Q as Query Cache
+    participant A as API
+    
+    U->>C: Interaction
+    C->>Q: Check Cache
+    Q-->>C: Cache Hit/Miss
+    C->>A: API Request
+    A-->>C: Response
+    C->>Q: Update Cache
+    C->>U: UI Update
+```
+
+## 🛡️ Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as Auth Provider
+    participant R as Router
+    participant P as Protected Route
+    
+    U->>A: Login Request
+    A->>A: Validate Credentials
+    A-->>U: Auth Token
+    U->>R: Navigate
+    R->>P: Access Route
+    P->>A: Check Auth
+    A-->>P: Allow/Deny
+```
+
+## 🎯 Core Features Implementation
+
+```mermaid
+mindmap
+  root((LMS Platform))
+    Learning
+      Courses
+        Live Classes
+        Recorded Sessions
+        Assignments
+      Learning Paths
+        Skill Trees
+        Progress Tracking
+        Certifications
+    Community
+      Forums
+      Study Groups
+      Expert Sessions
+      Events
+    Analytics
+      Progress Reports
+      Performance Metrics
+      Learning Insights
+    Gamification
+      Badges
+      Achievements
+      Leaderboards
+```
+
+## 🔐 Security & Performance
+
+### Security Measures
+- JWT-based authentication
+- Role-based access control
+- Input validation & sanitization
+- XSS & CSRF protection
+
+### Performance Optimizations
+- Code splitting & lazy loading
+- Image optimization
+- Caching strategies
+- Performance monitoring
+
+## 🎨 Theme Customization
+
+Our theme system supports both light and dark modes with a premium color palette:
+
+### Light Mode
+```css
+:root {
+  --primary: hsl(262, 83%, 58%);
+  --secondary: hsl(240, 4.8%, 95.9%);
+  --accent: hsl(262, 83%, 58%);
+  --background: hsl(260, 85%, 98%);
+  --foreground: hsl(240, 10%, 3.9%);
+}
+```
+
+### Dark Mode
+```css
+.dark {
+  --primary: hsl(262, 83%, 58%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --accent: hsl(262, 83%, 58%);
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+}
 ```
 
 ## 🤝 Contributing
