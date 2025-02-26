@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,20 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Upload, Star, GitBranch } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchResources } from '@/lib/api';
 
 const ResourceLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const { data: resources, isLoading } = useQuery({
-    queryKey: ['resources', searchTerm, selectedCategory],
-    queryFn: () => fetchResources(searchTerm, selectedCategory),
-  });
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Trigger search
+    // Implement search functionality
   };
 
   const handleUpload = () => {

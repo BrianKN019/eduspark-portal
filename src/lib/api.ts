@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { Badge, Certificate, LeaderboardEntry, UserAchievements } from '@/types/achievements';
 
 export const fetchUserData = async () => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,6 +23,7 @@ export const fetchUserData = async () => {
 
   return {
     name: profile?.full_name || user.email?.split('@')[0] || 'User',
+    role: profile?.role || 'student',
     learningStreak: calculateStreak(courseProgress || []),
     xpGained: calculateXP(courseProgress || []),
     goalsCompleted: (courseProgress || []).filter(p => p.completed).length,
@@ -31,12 +32,10 @@ export const fetchUserData = async () => {
 };
 
 const calculateStreak = (progress: any[]) => {
-  // Simple streak calculation based on consecutive days of activity
   return progress.length > 0 ? Math.min(progress.length, 30) : 0;
 };
 
 const calculateXP = (progress: any[]) => {
-  // XP calculation based on progress percentage
   return progress.reduce((sum, p) => sum + (p.progress_percentage || 0), 0);
 };
 
@@ -49,7 +48,6 @@ export const fetchWeeklyProgress = async () => {
     .select('*')
     .eq('user_id', user.id);
 
-  // Group progress by week
   return Array.from({ length: 7 }, (_, i) => ({
     week: `Week ${i + 1}`,
     progress: progress ? 
@@ -73,7 +71,7 @@ export const fetchCourses = async () => {
   return courses || [];
 };
 
-export const fetchUserAchievements = async () => {
+export const fetchUserAchievements = async (): Promise<UserAchievements> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('No user found');
 
@@ -92,13 +90,30 @@ export const fetchUserAchievements = async () => {
     .select('*')
     .eq('user_id', user.id);
 
+  const badges: Badge[] = (userBadges || []).map(ub => ({
+    id: ub.badges.id,
+    name: ub.badges.name,
+    description: ub.badges.description || '',
+    imageUrl: ub.badges.image_url || '',
+    tier: ub.badges.tier,
+    category: ub.badges.category
+  }));
+
+  const formattedCertificates: Certificate[] = (certificates || []).map(cert => ({
+    id: cert.id,
+    name: cert.name,
+    description: cert.description || '',
+    earnedDate: cert.earned_date,
+    downloadUrl: cert.download_url || ''
+  }));
+
   return {
-    badges: (userBadges || []).map(ub => ub.badges),
-    certificates: certificates || [],
+    badges,
+    certificates: formattedCertificates,
     coursesCompleted: (progress || []).filter(p => p.completed).length,
     streakDays: calculateStreak(progress || []),
     totalPoints: calculateXP(progress || []),
-    contributions: 0, // To be implemented with forum contributions
+    contributions: 0
   };
 };
 
@@ -125,14 +140,14 @@ export const fetchUpcomingEvents = async () => {
   return events || [];
 };
 
-export const fetchLeaderboard = async () => {
+export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   const { data: leaderboard } = await supabase
     .from('profiles')
     .select(`
       id,
       username,
-      user_badges:user_badges(count),
-      course_progress:course_progress(sum)
+      user_badges(count),
+      course_progress(progress_percentage)
     `)
     .limit(10);
 
@@ -140,7 +155,7 @@ export const fetchLeaderboard = async () => {
     userId: user.id,
     username: user.username || 'Anonymous',
     badgeCount: user.user_badges?.[0]?.count || 0,
-    points: user.course_progress?.[0]?.sum || 0,
+    points: user.course_progress?.reduce((sum: number, p: any) => sum + (p.progress_percentage || 0), 0) || 0
   }));
 };
 
@@ -206,4 +221,3 @@ supabase
     console.log('Event change received!', payload);
   })
   .subscribe();
-
