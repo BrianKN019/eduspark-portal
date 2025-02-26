@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, BookOpen, Star } from 'lucide-react';
-import { fetchCourses } from '@/lib/api';
+import { fetchCourses, updateCourseProgress } from '@/lib/api';
 import CourseCard from '@/components/CourseCard';
 import { toast } from "sonner";
 
