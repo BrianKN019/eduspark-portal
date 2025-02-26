@@ -1,3 +1,4 @@
+
 import React, { Suspense, lazy } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
@@ -19,7 +20,7 @@ const LearningPathFooter = lazy(() => import('@/components/dashboard/LearningPat
 const Dashboard: React.FC = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userData'],
-    queryFn: () => fetchUserData('Brian K'),
+    queryFn: fetchUserData,
   });
 
   const { data: weeklyProgressData, isLoading: progressLoading } = useQuery({
