@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star, Users } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
 
 interface CourseCardProps {
   course: {
@@ -17,13 +18,14 @@ interface CourseCardProps {
     thumbnail_url?: string;
   };
   onEnroll: () => void;
+  progress?: number;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 }) => {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {course.thumbnail_url && (
-        <div className="w-full h-48 overflow-hidden">
+        <div className="w-full h-32 overflow-hidden">
           <img 
             src={course.thumbnail_url} 
             alt={course.title}
@@ -55,12 +57,18 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
             <Star className="h-4 w-4 mr-2 text-yellow-500" />
             <span>{course.rating.toFixed(1)} ({course.reviews_count} reviews)</span>
           </div>
+          {progress > 0 && (
+            <div className="w-full">
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs text-gray-500 mt-1">{progress}% completed</p>
+            </div>
+          )}
         </div>
         <Button 
           onClick={onEnroll} 
           className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
         >
-          Enroll Now
+          {progress > 0 ? 'Continue Course' : 'Enroll Now'}
         </Button>
       </CardContent>
     </Card>

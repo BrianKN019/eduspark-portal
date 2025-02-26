@@ -1,4 +1,3 @@
-
 import React, { Suspense, lazy } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserData, fetchWeeklyProgress } from '@/lib/api';
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Video, Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const StudentDashboard = lazy(() => import('@/components/dashboard/StudentDashboard'));
 const InstructorDashboard = lazy(() => import('@/components/dashboard/InstructorDashboard'));
@@ -21,6 +21,19 @@ const Dashboard: React.FC = () => {
   const { data: userData, isLoading: userLoading } = useQuery({
     queryKey: ['userData'],
     queryFn: fetchUserData,
+  });
+
+  // Add progress data fetch
+  const { data: courseProgress } = useQuery({
+    queryKey: ['courseProgress'],
+    queryFn: async () => {
+      const { data: progress } = await supabase
+        .from('course_progress')
+        .select('*')
+        .order('last_accessed', { ascending: false })
+        .limit(10);
+      return progress;
+    }
   });
 
   const { data: weeklyProgressData, isLoading: progressLoading } = useQuery({

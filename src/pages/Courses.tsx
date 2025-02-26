@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Search, BookOpen, Star } from 'lucide-react';
 import { fetchCourses, updateCourseProgress } from '@/lib/api';
 import CourseCard from '@/components/CourseCard';
 import { toast } from "sonner";
+import { supabase } from '@/lib/supabase';
 
 const Courses: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,15 +20,26 @@ const Courses: React.FC = () => {
     queryFn: fetchCourses,
   });
 
+  const { data: courseProgress } = useQuery({
+    queryKey: ['courseProgress'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('course_progress')
+        .select('*');
+      return data || [];
+    }
+  });
+
   useEffect(() => {
     if (courses) {
-      setFilteredCourses(
-        courses.filter(course =>
+      const filtered = courses
+        .filter(course =>
           (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
            course.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
           (selectedCategory === 'all' || course.field === selectedCategory)
         )
-      );
+        .slice(0, 10);
+      setFilteredCourses(filtered);
     }
   }, [searchTerm, selectedCategory, courses]);
 
@@ -41,8 +52,15 @@ const Courses: React.FC = () => {
       await updateCourseProgress(courseId, 0);
       toast.success("Successfully enrolled in the course!");
     } catch (error) {
+      console.error('Enrollment error:', error);
       toast.error("Failed to enroll in the course. Please try again.");
     }
+  };
+
+  const getProgress = (courseId: string) => {
+    if (!courseProgress) return 0;
+    const progress = courseProgress.find(p => p.course_id === courseId);
+    return progress ? progress.progress_percentage : 0;
   };
 
   if (error) {
@@ -102,6 +120,7 @@ const Courses: React.FC = () => {
               key={course.id} 
               course={course}
               onEnroll={() => handleEnrollment(course.id)}
+              progress={getProgress(course.id)}
             />
           ))}
         </div>
