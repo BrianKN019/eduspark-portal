@@ -1,42 +1,67 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Star } from 'lucide-react';
+import { BookOpen, Star, Users } from 'lucide-react';
 
 interface CourseCardProps {
   course: {
-    id: number;
+    id: string;
     title: string;
+    description: string;
     field: string;
     level: string;
-    lessons: number;
+    lessons_count: number;
     rating: number;
-    reviews: number;
-    description: string;
+    reviews_count: number;
+    thumbnail_url?: string;
   };
+  onEnroll: () => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll }) => {
   return (
-    <Card className="neumorphic-card">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      {course.thumbnail_url && (
+        <div className="w-full h-48 overflow-hidden">
+          <img 
+            src={course.thumbnail_url} 
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <CardHeader>
-        <CardTitle>{course.title}</CardTitle>
+        <CardTitle className="line-clamp-2">{course.title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 mb-2">{course.description}</p>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-800 rounded-full">{course.field}</span>
-          <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">{course.level}</span>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+          {course.description}
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded-full">
+            {course.field}
+          </span>
+          <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 rounded-full">
+            {course.level}
+          </span>
         </div>
-        <div className="flex items-center mt-2">
-          <BookOpen className="h-4 w-4 mr-2" />
-          <span>{course.lessons} lessons</span>
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center text-sm">
+            <BookOpen className="h-4 w-4 mr-2" />
+            <span>{course.lessons_count} lessons</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <Star className="h-4 w-4 mr-2 text-yellow-500" />
+            <span>{course.rating.toFixed(1)} ({course.reviews_count} reviews)</span>
+          </div>
         </div>
-        <div className="flex items-center mt-2">
-          <Star className="h-4 w-4 mr-2 text-yellow-400" />
-          <span>{course.rating} ({course.reviews} reviews)</span>
-        </div>
-        <Button className="mt-4 w-full neumorphic-button">Enroll Now</Button>
+        <Button 
+          onClick={onEnroll} 
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+        >
+          Enroll Now
+        </Button>
       </CardContent>
     </Card>
   );
