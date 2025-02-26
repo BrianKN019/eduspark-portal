@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Badge, Certificate, LeaderboardEntry, UserAchievements } from '@/types/achievements';
 
@@ -21,9 +22,12 @@ export const fetchUserData = async () => {
     .select('*, badges(*)')
     .eq('user_id', user.id);
 
+  // Since 'role' doesn't exist in profiles table, we'll handle it through user metadata
+  const userRole = user.user_metadata?.role || 'student';
+
   return {
     name: profile?.full_name || user.email?.split('@')[0] || 'User',
-    role: profile?.role || 'student',
+    role: userRole as 'student' | 'instructor' | 'admin',
     learningStreak: calculateStreak(courseProgress || []),
     xpGained: calculateXP(courseProgress || []),
     goalsCompleted: (courseProgress || []).filter(p => p.completed).length,
@@ -90,14 +94,26 @@ export const fetchUserAchievements = async (): Promise<UserAchievements> => {
     .select('*')
     .eq('user_id', user.id);
 
-  const badges: Badge[] = (userBadges || []).map(ub => ({
-    id: ub.badges.id,
-    name: ub.badges.name,
-    description: ub.badges.description || '',
-    imageUrl: ub.badges.image_url || '',
-    tier: ub.badges.tier,
-    category: ub.badges.category
-  }));
+  const badges: Badge[] = (userBadges || []).map(ub => {
+    // Ensure tier is one of the allowed values
+    const tier = ub.badges.tier.toLowerCase();
+    const validTier = ['bronze', 'silver', 'gold'].includes(tier) ? tier as 'bronze' | 'silver' | 'gold' : 'bronze';
+
+    // Ensure category is one of the allowed values
+    const category = ub.badges.category.toLowerCase();
+    const validCategory = ['course', 'achievement', 'streak', 'milestone'].includes(category) 
+      ? category as 'course' | 'achievement' | 'streak' | 'milestone'
+      : 'achievement';
+
+    return {
+      id: ub.badges.id,
+      name: ub.badges.name,
+      description: ub.badges.description || '',
+      imageUrl: ub.badges.image_url || '',
+      tier: validTier,
+      category: validCategory
+    };
+  });
 
   const formattedCertificates: Certificate[] = (certificates || []).map(cert => ({
     id: cert.id,
