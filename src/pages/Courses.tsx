@@ -14,9 +14,10 @@ import { supabase } from '@/integrations/supabase/client';
 const Courses: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
 
-  const { data: courses, isLoading, error } = useQuery({
+  // Add isRefetching to handle loading state properly
+  const { data: courses, isLoading, error, isRefetching } = useQuery({
     queryKey: ['courses'],
     queryFn: fetchCourses,
   });
@@ -24,15 +25,34 @@ const Courses: React.FC = () => {
   const { data: courseProgress } = useQuery({
     queryKey: ['courseProgress'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('course_progress')
-        .select('*');
-      return data || [];
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+        
+        const { data, error } = await supabase
+          .from('course_progress')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (error) {
+          console.error("Error fetching course progress:", error);
+          return [];
+        }
+        
+        return data || [];
+      } catch (e) {
+        console.error("Exception in course progress query:", e);
+        return [];
+      }
     }
   });
 
   useEffect(() => {
-    if (courses) {
+    // Add debugging to see if courses are loading
+    console.log("Courses data:", courses);
+    console.log("Course progress:", courseProgress);
+    
+    if (courses && Array.isArray(courses)) {
       const filtered = courses
         .filter(course =>
           (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,7 +70,9 @@ const Courses: React.FC = () => {
 
   const handleEnrollment = async (courseId: string) => {
     try {
-      await updateCourseProgress(courseId, 0);
+      console.log("Enrolling in course:", courseId);
+      const result = await updateCourseProgress(courseId, 0);
+      console.log("Enrollment result:", result);
       toast.success("Successfully enrolled in the course!");
     } catch (error) {
       console.error('Enrollment error:', error);
@@ -65,10 +87,14 @@ const Courses: React.FC = () => {
   };
 
   if (error) {
+    console.error("Error loading courses:", error);
     toast.error("Failed to load courses. Please refresh the page.");
   }
 
   const categories = ['all', 'Technology', 'Design', 'Business', 'Marketing', 'Arts', 'Personal Development'];
+
+  // Show loading state for both initial load and refetching
+  const isDataLoading = isLoading || isRefetching;
 
   return (
     <div className="space-y-6 p-6">
@@ -110,11 +136,11 @@ const Courses: React.FC = () => {
         </TabsList>
       </Tabs>
 
-      {isLoading ? (
+      {isDataLoading ? (
         <div className="flex justify-center items-center h-32">
           <p>Loading courses...</p>
         </div>
-      ) : (
+      ) : filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course) => (
             <CourseCard 
@@ -124,6 +150,10 @@ const Courses: React.FC = () => {
               progress={getProgress(course.id)}
             />
           ))}
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-32">
+          <p>No courses found. Try adjusting your search or category filter.</p>
         </div>
       )}
     </div>

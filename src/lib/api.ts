@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Badge, Certificate, LeaderboardEntry, UserAchievements } from '@/types/achievements';
 
@@ -22,7 +21,6 @@ export const fetchUserData = async () => {
     .select('*, badges(*)')
     .eq('user_id', user.id);
 
-  // Since 'role' doesn't exist in profiles table, we'll handle it through user metadata
   const userRole = user.user_metadata?.role || 'student';
 
   return {
@@ -68,11 +66,23 @@ const isWithinLastWeek = (date: string, weekIndex: number) => {
 };
 
 export const fetchCourses = async () => {
-  const { data: courses } = await supabase
-    .from('courses')
-    .select('*');
-
-  return courses || [];
+  try {
+    console.log("Fetching courses...");
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*');
+    
+    if (error) {
+      console.error("Error fetching courses:", error);
+      throw error;
+    }
+    
+    console.log("Fetched courses:", data);
+    return data || [];
+  } catch (e) {
+    console.error("Exception in fetchCourses:", e);
+    throw e;
+  }
 };
 
 export const fetchUserAchievements = async (): Promise<UserAchievements> => {
@@ -95,11 +105,9 @@ export const fetchUserAchievements = async (): Promise<UserAchievements> => {
     .eq('user_id', user.id);
 
   const badges: Badge[] = (userBadges || []).map(ub => {
-    // Ensure tier is one of the allowed values
     const tier = ub.badges.tier.toLowerCase();
     const validTier = ['bronze', 'silver', 'gold'].includes(tier) ? tier as 'bronze' | 'silver' | 'gold' : 'bronze';
 
-    // Ensure category is one of the allowed values
     const category = ub.badges.category.toLowerCase();
     const validCategory = ['course', 'achievement', 'streak', 'milestone'].includes(category) 
       ? category as 'course' | 'achievement' | 'streak' | 'milestone'
@@ -205,110 +213,195 @@ export const joinEvent = async (eventId: string) => {
 };
 
 export const updateCourseProgress = async (courseId: string, progress: number) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No user found');
-
   try {
-    // First check if enrollment exists
-    const { data: existingProgress } = await supabase
+    console.log("Starting updateCourseProgress for course:", courseId);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("No authenticated user found");
+      throw new Error('No user found');
+    }
+    
+    console.log("User authenticated:", user.id);
+
+    const { data: existingProgress, error: selectError } = await supabase
       .from('course_progress')
       .select('*')
       .eq('user_id', user.id)
       .eq('course_id', courseId)
-      .single();
+      .maybeSingle();
+    
+    if (selectError) {
+      console.error("Error checking existing progress:", selectError);
+    }
+    
+    console.log("Existing progress:", existingProgress);
 
-    const { error } = await supabase
+    const progressData = {
+      user_id: user.id,
+      course_id: courseId,
+      progress_percentage: progress,
+      completed: progress === 100,
+      last_accessed: new Date().toISOString()
+    };
+    
+    console.log("Upserting progress data:", progressData);
+
+    const { data, error } = await supabase
       .from('course_progress')
-      .upsert([
-        {
-          user_id: user.id,
-          course_id: courseId,
-          progress_percentage: progress,
-          completed: progress === 100,
-          last_accessed: new Date().toISOString()
-        }
-      ]);
+      .upsert([progressData], {
+        onConflict: 'user_id,course_id'
+      })
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error upserting course progress:", error);
+      throw error;
+    }
+    
+    console.log("Successfully updated course progress:", data);
 
-    // If course is completed, generate certificate and badge
     if (progress === 100) {
       await generateCertificate(courseId);
       await awardCourseBadge(courseId);
     }
 
-    return { success: true };
+    return { success: true, data };
   } catch (error) {
-    console.error('Error updating course progress:', error);
+    console.error('Error in updateCourseProgress:', error);
     throw error;
   }
 };
 
 export const generateCertificate = async (courseId: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No user found');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No user found');
 
-  const { data: course } = await supabase
-    .from('courses')
-    .select('*')
-    .eq('id', courseId)
-    .single();
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', courseId)
+      .single();
 
-  if (!course) throw new Error('Course not found');
+    if (courseError || !course) {
+      console.error("Error finding course:", courseError);
+      throw new Error('Course not found');
+    }
 
-  // Generate a certificate entry
-  const { error } = await supabase
-    .from('certificates')
-    .insert([
-      {
-        user_id: user.id,
-        course_id: courseId,
-        name: `${course.title} Certificate`,
-        description: `Certificate of completion for ${course.title}`,
-        download_url: `/certificates/${courseId}.pdf`, // This would be generated by a backend service
-        earned_date: new Date().toISOString()
-      }
-    ]);
+    const { data, error } = await supabase
+      .from('certificates')
+      .insert([
+        {
+          user_id: user.id,
+          course_id: courseId,
+          name: `${course.title} Certificate`,
+          description: `Certificate of completion for ${course.title}`,
+          download_url: `/certificates/${courseId}.pdf`, // This would be generated by a backend service
+          earned_date: new Date().toISOString()
+        }
+      ])
+      .select();
 
-  if (error) throw error;
+    if (error) {
+      console.error("Error generating certificate:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error("Exception in generateCertificate:", e);
+    throw e;
+  }
 };
 
 export const awardCourseBadge = async (courseId: string) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('No user found');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No user found');
 
-  const { data: course } = await supabase
-    .from('courses')
-    .select('*')
-    .eq('id', courseId)
-    .single();
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', courseId)
+      .single();
 
-  if (!course) throw new Error('Course not found');
+    if (courseError || !course) {
+      console.error("Error finding course:", courseError);
+      throw new Error('Course not found');
+    }
 
-  // Find an appropriate badge based on course field
-  const { data: badges } = await supabase
-    .from('badges')
-    .select('*')
-    .eq('category', 'course')
-    .limit(1);
-  
-  if (!badges || badges.length === 0) return;
-
-  // Award a badge for course completion
-  const { error } = await supabase
-    .from('user_badges')
-    .insert([
-      {
-        user_id: user.id,
-        badge_id: badges[0].id, // Use an existing badge ID from the database
-        earned_date: new Date().toISOString()
+    const { data: badges, error: badgesError } = await supabase
+      .from('badges')
+      .select('*')
+      .eq('category', 'course')
+      .limit(1);
+    
+    if (badgesError) {
+      console.error("Error finding badges:", badgesError);
+      return;
+    }
+    
+    if (!badges || badges.length === 0) {
+      console.log("No badges found, creating a default badge");
+      const { data: newBadge, error: createError } = await supabase
+        .from('badges')
+        .insert([
+          {
+            name: 'Course Completion',
+            description: 'Awarded for completing a course',
+            tier: 'bronze',
+            category: 'course',
+            image_url: '/badges/course-completion.png'
+          }
+        ])
+        .select();
+        
+      if (createError || !newBadge || newBadge.length === 0) {
+        console.error("Error creating badge:", createError);
+        return;
       }
-    ]);
+      
+      const { data, error } = await supabase
+        .from('user_badges')
+        .insert([
+          {
+            user_id: user.id,
+            badge_id: newBadge[0].id,
+            earned_date: new Date().toISOString()
+          }
+        ])
+        .select();
+        
+      if (error) {
+        console.error("Error awarding badge:", error);
+      }
+      
+      return data;
+    }
 
-  if (error) throw error;
+    const { data, error } = await supabase
+      .from('user_badges')
+      .insert([
+        {
+          user_id: user.id,
+          badge_id: badges[0].id,
+          earned_date: new Date().toISOString()
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error("Error awarding badge:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error("Exception in awardCourseBadge:", e);
+    return null;
+  }
 };
 
-// Enable realtime subscriptions for relevant tables
 supabase
   .channel('public:forum_discussions')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_discussions' }, payload => {
