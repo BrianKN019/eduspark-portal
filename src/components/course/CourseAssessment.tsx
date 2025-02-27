@@ -4,9 +4,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { BrainCircuit, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
+import { BrainCircuit, ArrowRight, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from "sonner";
-import { generateAssessment } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Question {
   id: number;
@@ -43,26 +43,80 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
   
-  // Generate or fetch assessment
+  // Generate or fetch assessment using the OpenAI API via edge function
   const handleStartAssessment = async () => {
     setLoading(true);
     try {
-      // In real implementation, this should call an API to generate/fetch assessment
-      const result = await generateAssessment(courseId, selectedDifficulty, field);
+      // Call the generateAssessment edge function
+      const response = await fetch('/api/generate-assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseName,
+          field,
+          level,
+          difficulty: selectedDifficulty,
+          questionCount: selectedDifficulty === 'beginner' ? 5 : selectedDifficulty === 'intermediate' ? 8 : 10
+        }),
+      });
       
-      if (result) {
-        setAssessment(result);
+      if (!response.ok) {
+        throw new Error('Failed to generate assessment');
+      }
+      
+      const result = await response.json();
+      
+      if (result.assessment) {
+        setAssessment(result.assessment);
         // Initialize answers array with -1 (no answer selected)
-        setAnswers(new Array(result.questions.length).fill(-1));
+        setAnswers(new Array(result.assessment.questions.length).fill(-1));
         setShowResults(false);
         setScore(0);
+      } else {
+        // Fallback to static generation if API fails
+        generateStaticAssessment();
       }
     } catch (error) {
       console.error("Error generating assessment:", error);
-      toast.error("Failed to generate assessment. Please try again.");
+      toast.error("Failed to connect to AI service. Using local generation instead.");
+      // Fallback to static generation
+      generateStaticAssessment();
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Fallback static assessment generator
+  const generateStaticAssessment = () => {
+    const questionCount = selectedDifficulty === 'beginner' ? 5 : 
+                          selectedDifficulty === 'intermediate' ? 8 : 10;
+    
+    const mockQuestions = [...Array(questionCount)].map((_, index) => ({
+      id: index + 1,
+      text: `Sample question ${index + 1} about ${field} (${selectedDifficulty} level)`,
+      options: [
+        `Option A for question ${index + 1}`,
+        `Option B for question ${index + 1}`,
+        `Option C for question ${index + 1}`,
+        `Option D for question ${index + 1}`
+      ],
+      correctAnswer: Math.floor(Math.random() * 4) // Random correct answer
+    }));
+    
+    const generatedAssessment = {
+      id: `assessment-${courseId}-${selectedDifficulty}`,
+      title: `${courseName} Assessment`,
+      description: `Test your knowledge of ${field} concepts at the ${selectedDifficulty} level.`,
+      difficulty: selectedDifficulty,
+      questions: mockQuestions
+    };
+    
+    setAssessment(generatedAssessment);
+    setAnswers(new Array(mockQuestions.length).fill(-1));
+    setShowResults(false);
+    setScore(0);
   };
   
   // Handle answer selection
@@ -94,12 +148,41 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     setScore(finalScore);
     setShowResults(true);
     
+    // Save assessment result to Supabase
+    saveAssessmentResult(finalScore);
+    
+    // Show toast notification based on score
     if (finalScore >= 80) {
       toast.success(`Congratulations! You scored ${finalScore}%`);
     } else if (finalScore >= 60) {
       toast.info(`You scored ${finalScore}%. Keep practicing!`);
     } else {
       toast.info(`You scored ${finalScore}%. Review the material and try again.`);
+    }
+  };
+  
+  // Save assessment results to the database
+  const saveAssessmentResult = async (score: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Save assessment result
+      const { error } = await supabase
+        .from('assessment_results')
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          score,
+          difficulty: selectedDifficulty,
+          completed_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.error("Error saving assessment result:", error);
+      }
+    } catch (error) {
+      console.error("Error in saveAssessmentResult:", error);
     }
   };
   
@@ -127,7 +210,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
               Course Assessment
             </CardTitle>
             <CardDescription>
-              Test your knowledge with automatically generated questions based on the course content.
+              Test your knowledge with AI-generated questions based on the course content.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -169,7 +252,12 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
               className="w-full"
               disabled={loading}
             >
-              {loading ? 'Generating Assessment...' : 'Start Assessment'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating Assessment...
+                </>
+              ) : 'Start Assessment'}
             </Button>
           </CardFooter>
         </Card>

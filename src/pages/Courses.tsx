@@ -11,6 +11,15 @@ import CourseCard from '@/components/CourseCard';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
+// Placeholder images for courses that don't have thumbnails
+const placeholderImages = [
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+  "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
+  "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7",
+  "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
+];
+
 const Courses: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -48,18 +57,26 @@ const Courses: React.FC = () => {
   });
 
   useEffect(() => {
-    // Add debugging to see if courses are loading
-    console.log("Courses data:", courses);
-    console.log("Course progress:", courseProgress);
-    
+    // Process courses data to add placeholder images
     if (courses && Array.isArray(courses)) {
-      const filtered = courses
-        .filter(course =>
-          (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           course.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-          (selectedCategory === 'all' || course.field === selectedCategory)
-        )
-        .slice(0, 10);
+      const processed = courses.map((course, index) => {
+        // If course doesn't have a thumbnail, add one
+        if (!course.thumbnail_url) {
+          return {
+            ...course,
+            thumbnail_url: placeholderImages[index % placeholderImages.length]
+          };
+        }
+        return course;
+      });
+      
+      // Apply filters
+      const filtered = processed.filter(course =>
+        (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         course.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (selectedCategory === 'all' || course.field === selectedCategory)
+      );
+      
       setFilteredCourses(filtered);
     }
   }, [searchTerm, selectedCategory, courses]);
