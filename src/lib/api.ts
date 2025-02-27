@@ -285,13 +285,22 @@ export const awardCourseBadge = async (courseId: string) => {
 
   if (!course) throw new Error('Course not found');
 
+  // Find an appropriate badge based on course field
+  const { data: badges } = await supabase
+    .from('badges')
+    .select('*')
+    .eq('category', 'course')
+    .limit(1);
+  
+  if (!badges || badges.length === 0) return;
+
   // Award a badge for course completion
   const { error } = await supabase
     .from('user_badges')
     .insert([
       {
         user_id: user.id,
-        badge_id: course.field === 'Technology' ? 1 : 2, // Assuming badge IDs from our previous migration
+        badge_id: badges[0].id, // Use an existing badge ID from the database
         earned_date: new Date().toISOString()
       }
     ]);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { Search, BookOpen, Star } from 'lucide-react';
 import { fetchCourses, updateCourseProgress } from '@/lib/api';
 import CourseCard from '@/components/CourseCard';
 import { toast } from "sonner";
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const Courses: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
