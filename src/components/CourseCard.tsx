@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Star, Users } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from 'react-router-dom';
 
 interface CourseCardProps {
   course: {
@@ -22,10 +23,24 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (progress > 0) {
+      // If already enrolled, navigate to course detail
+      navigate(`/courses/${course.id}`);
+    } else {
+      // If not enrolled, trigger enrollment
+      onEnroll();
+      // After enrollment, navigate to course detail
+      setTimeout(() => navigate(`/courses/${course.id}`), 500);
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {course.thumbnail_url && (
-        <div className="w-full h-32 overflow-hidden">
+        <div className="w-full h-32 overflow-hidden cursor-pointer" onClick={() => navigate(`/courses/${course.id}`)}>
           <img 
             src={course.thumbnail_url} 
             alt={course.title}
@@ -34,7 +49,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 
         </div>
       )}
       <CardHeader>
-        <CardTitle className="line-clamp-2">{course.title}</CardTitle>
+        <CardTitle className="line-clamp-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={() => navigate(`/courses/${course.id}`)}>
+          {course.title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
@@ -65,7 +82,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 
           )}
         </div>
         <Button 
-          onClick={onEnroll} 
+          onClick={handleClick} 
           className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
         >
           {progress > 0 ? 'Continue Course' : 'Enroll Now'}

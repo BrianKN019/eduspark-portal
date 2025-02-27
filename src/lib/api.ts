@@ -402,6 +402,65 @@ export const awardCourseBadge = async (courseId: string) => {
   }
 };
 
+export const fetchCourseById = async (courseId: string) => {
+  try {
+    console.log("Fetching course details for:", courseId);
+    const { data, error } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', courseId)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching course details:", error);
+      throw error;
+    }
+    
+    console.log("Fetched course details:", data);
+    return data;
+  } catch (e) {
+    console.error("Exception in fetchCourseById:", e);
+    throw e;
+  }
+};
+
+export const generateAssessment = async (courseId: string, difficulty: string, subject: string) => {
+  try {
+    console.log(`Generating ${difficulty} assessment for course ${courseId}`);
+    
+    // In a production app, this would call an AI service or backend API
+    // For now, we're generating mock data
+    
+    const questionCount = difficulty === 'beginner' ? 5 : difficulty === 'intermediate' ? 8 : 10;
+    
+    const mockQuestions = [...Array(questionCount)].map((_, index) => ({
+      id: index + 1,
+      text: `Sample question ${index + 1} about ${subject} (${difficulty} level)`,
+      options: [
+        `Option A for question ${index + 1}`,
+        `Option B for question ${index + 1}`,
+        `Option C for question ${index + 1}`,
+        `Option D for question ${index + 1}`
+      ],
+      correctAnswer: Math.floor(Math.random() * 4) // Random correct answer
+    }));
+    
+    const assessment = {
+      id: `assessment-${courseId}-${difficulty}`,
+      title: `${subject} Assessment`,
+      description: `Test your knowledge of ${subject} concepts at the ${difficulty} level.`,
+      difficulty: difficulty as 'beginner' | 'intermediate' | 'advanced',
+      questions: mockQuestions
+    };
+    
+    console.log("Generated assessment:", assessment);
+    return assessment;
+  } catch (e) {
+    console.error("Exception in generateAssessment:", e);
+    throw e;
+  }
+};
+
 supabase
   .channel('public:forum_discussions')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'forum_discussions' }, payload => {

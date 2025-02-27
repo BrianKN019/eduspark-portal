@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
 import LiveClasses from "./pages/LiveClasses";
 import Analytics from "./pages/Analytics";
 import Calendar from "./pages/Calendar";
@@ -76,6 +77,7 @@ const App = () => {
                 >
                   <Route index element={<Dashboard />} />
                   <Route path="courses" element={<Courses />} />
+                  <Route path="courses/:courseId" element={<CourseDetail />} />
                   <Route path="live-classes" element={<LiveClasses />} />
                   <Route path="analytics" element={<Analytics />} />
                   <Route path="calendar" element={<Calendar />} />
