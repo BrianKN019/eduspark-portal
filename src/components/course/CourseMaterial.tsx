@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Play, Clock, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Stepper, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from "@/components/ui/stepper";
+import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 interface CourseMaterialProps {
   course: any;
@@ -21,7 +24,35 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   onLessonComplete,
   userProgress
 }) => {
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const maxAccessibleLesson = Math.ceil((userProgress / 100) * lessons.length);
+  
+  // Fetch completed lessons on component mount
+  useEffect(() => {
+    const fetchCompletedLessons = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('course_progress')
+          .select('completed_lessons')
+          .eq('user_id', user.id)
+          .eq('course_id', course?.id)
+          .single();
+          
+        if (!error && data && data.completed_lessons) {
+          setCompletedLessons(data.completed_lessons);
+        }
+      } catch (e) {
+        console.error("Error fetching completed lessons:", e);
+      }
+    };
+    
+    if (course?.id) {
+      fetchCompletedLessons();
+    }
+  }, [course?.id]);
   
   const handlePrevious = () => {
     setCurrentLessonIndex(Math.max(0, currentLessonIndex - 1));
@@ -32,11 +63,69 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
     setCurrentLessonIndex(nextIndex);
   };
   
-  const handleComplete = () => {
-    onLessonComplete(currentLessonIndex);
+  const handleComplete = async () => {
+    // Only allow completing lessons up to the maxAccessibleLesson
+    if ((currentLessonIndex + 1) <= maxAccessibleLesson) {
+      // Check if this lesson is already completed
+      if (!completedLessons.includes(currentLessonIndex)) {
+        // Add the lesson to completed lessons
+        const updatedCompletedLessons = [...completedLessons, currentLessonIndex];
+        setCompletedLessons(updatedCompletedLessons);
+        
+        // Call the parent component's onLessonComplete function
+        onLessonComplete(currentLessonIndex);
+        
+        // Calculate the new progress percentage
+        // Each lesson contributes equally to 70% of the course
+        // The assessment contributes the remaining 30%
+        const lessonProgress = (updatedCompletedLessons.length / lessons.length) * 70;
+        
+        // Update the progress in the database
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+          
+          const { error } = await supabase
+            .from('course_progress')
+            .update({ 
+              completed_lessons: updatedCompletedLessons,
+              progress_percentage: Math.round(lessonProgress),
+              last_accessed: new Date().toISOString(),
+            })
+            .eq('user_id', user.id)
+            .eq('course_id', course?.id);
+          
+          if (error) {
+            console.error("Error updating course progress:", error);
+            toast.error("Failed to update progress");
+          } else {
+            toast.success("Lesson completed!");
+            
+            // Move to next lesson if available
+            if (currentLessonIndex < lessons.length - 1) {
+              handleNext();
+            }
+          }
+        } catch (e) {
+          console.error("Error in handleComplete:", e);
+          toast.error("An error occurred");
+        }
+      } else {
+        toast.info("You've already completed this lesson");
+      }
+    } else {
+      toast.error("You need to progress further in the course to complete this lesson");
+    }
   };
   
+  // Get the stepper value (current step)
+  const currentStep = currentLessonIndex + 1;
+  
+  // Check if current lesson is completable
   const isCompletable = (currentLessonIndex + 1) <= maxAccessibleLesson;
+  
+  // Check if current lesson is already completed
+  const isLessonCompleted = (index: number) => completedLessons.includes(index);
   
   return (
     <div className="space-y-6">
@@ -50,51 +139,58 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       </Card>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Lesson Navigator */}
+        {/* Lesson Navigator with Stepper */}
         <div className="md:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Lessons</CardTitle>
+              <CardTitle>Course Progress</CardTitle>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden mt-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all" 
+                  style={{ width: `${userProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-right mt-1">{userProgress}% Complete</p>
             </CardHeader>
             <CardContent className="max-h-[500px] overflow-y-auto">
-              <div className="space-y-2">
+              <Stepper value={currentStep} orientation="vertical">
                 {lessons.map((lesson, index) => {
                   const isAccessible = index <= maxAccessibleLesson;
                   const isActive = index === currentLessonIndex;
-                  const isCompleted = index < maxAccessibleLesson;
+                  const isCompleted = isLessonCompleted(index);
                   
                   return (
-                    <div 
-                      key={index}
-                      className={`p-3 rounded-md flex items-center transition-colors cursor-pointer ${
-                        isActive 
-                          ? 'bg-primary text-primary-foreground' 
-                          : isAccessible 
-                          ? 'hover:bg-gray-100 dark:hover:bg-gray-800' 
-                          : 'opacity-50 cursor-not-allowed'
-                      }`}
-                      onClick={() => isAccessible && setCurrentLessonIndex(index)}
+                    <StepperItem 
+                      key={index} 
+                      step={index + 1} 
+                      completed={isCompleted}
+                      className="relative items-start not-last:pb-4"
                     >
-                      <div className="w-6 h-6 mr-2 flex items-center justify-center">
-                        {isCompleted ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center">
-                            {index + 1}
+                      <StepperTrigger 
+                        className={`items-start rounded pb-12 last:pb-0 w-full text-left ${
+                          !isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
+                        onClick={() => isAccessible && setCurrentLessonIndex(index)}
+                        disabled={!isAccessible}
+                      >
+                        <StepperIndicator>
+                          {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
+                        </StepperIndicator>
+                        <div className="ml-3 mt-0.5">
+                          <StepperTitle>{lesson.title}</StepperTitle>
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <Clock className="mr-1 h-3 w-3" /> 
+                            {lesson.duration}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{lesson.title}</p>
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                          <Clock className="mr-1 h-3 w-3" /> 
-                          {lesson.duration}
                         </div>
-                      </div>
-                    </div>
+                      </StepperTrigger>
+                      {index < lessons.length - 1 && (
+                        <StepperSeparator className="absolute left-3 top-[calc(1.5rem+0.125rem)] -translate-x-1/2 h-[calc(100%-1.5rem-0.25rem)]" />
+                      )}
+                    </StepperItem>
                   );
                 })}
-              </div>
+              </Stepper>
             </CardContent>
           </Card>
         </div>
@@ -160,7 +256,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 <ChevronLeft className="mr-2 h-4 w-4" /> Previous
               </Button>
               <div className="flex space-x-2">
-                {isCompletable && (
+                {isCompletable && !isLessonCompleted(currentLessonIndex) && (
                   <Button 
                     onClick={handleComplete}
                     variant="default"
@@ -168,10 +264,15 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                     <CheckCircle className="mr-2 h-4 w-4" /> Mark as Complete
                   </Button>
                 )}
+                {isLessonCompleted(currentLessonIndex) && (
+                  <Button variant="outline" disabled>
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Completed
+                  </Button>
+                )}
                 <Button 
                   onClick={handleNext}
                   disabled={currentLessonIndex === lessons.length - 1}
-                  variant={isCompletable ? "outline" : "default"}
+                  variant={isCompletable && !isLessonCompleted(currentLessonIndex) ? "outline" : "default"}
                 >
                   Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>

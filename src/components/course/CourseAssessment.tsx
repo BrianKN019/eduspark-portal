@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,80 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
+      // Get the current course progress
+      const { data: progressData, error: progressError } = await supabase
+        .from('course_progress')
+        .select('progress_percentage, completed_lessons, assessment_score')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .single();
+      
+      if (progressError) {
+        console.error("Error fetching course progress:", progressError);
+        toast.error("Failed to save assessment result");
+        return;
+      }
+      
+      // Calculate the new progress percentage
+      let newProgressPercentage = progressData.progress_percentage || 0;
+      
+      // If the assessment score is >= 70%, contribute 30% to the course progress
+      if (score >= 70) {
+        // Lesson completion contributes 70% and assessment contributes 30%
+        // Calculate the lesson portion of the progress (which is already in progressData)
+        const lessonPortion = progressData.completed_lessons?.length 
+          ? (progressData.completed_lessons.length / 10) * 70  // Assuming 10 lessons per course
+          : 0;
+        
+        // Add the assessment portion (30%) for a passing score
+        newProgressPercentage = Math.min(100, Math.round(lessonPortion + 30));
+        
+        // Mark course as completed if progress is 100%
+        const completed = newProgressPercentage >= 100;
+        
+        // Update the progress
+        const { error: updateError } = await supabase
+          .from('course_progress')
+          .update({
+            progress_percentage: newProgressPercentage,
+            assessment_score: score,
+            completed: completed,
+            last_accessed: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .eq('course_id', courseId);
+          
+        if (updateError) {
+          console.error("Error updating course progress:", updateError);
+          toast.error("Failed to update course progress");
+          return;
+        }
+        
+        if (completed) {
+          toast.success("🎉 Course completed! Congratulations!");
+        } else {
+          toast.success("Assessment passed! Progress updated.");
+        }
+      } else {
+        // Just save the assessment score without updating progress
+        const { error: updateError } = await (supabase
+          .from('course_progress')
+          .update({
+            assessment_score: score,
+            last_accessed: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .eq('course_id', courseId));
+          
+        if (updateError) {
+          console.error("Error updating assessment score:", updateError);
+          toast.error("Failed to save assessment score");
+        } else {
+          toast.info("Assessment score saved. Try again to improve your score.");
+        }
+      }
+      
+      // Save the assessment result
       const { error } = await (supabase
         .from('assessment_results' as any)
         .insert({
