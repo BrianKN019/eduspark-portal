@@ -38,9 +38,9 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Use any() to cast the table name since course_notes is new
+      // Fetch notes from the course_notes table
       const { data, error } = await supabase
-        .from('course_notes' as any)
+        .from('course_notes')
         .select('*')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
@@ -51,8 +51,13 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
         return;
       }
 
-      // Cast the data to CourseNote[] to ensure type safety
-      setNotes(data as CourseNote[] || []);
+      // Use a type guard to ensure data is not null before setting it
+      if (data) {
+        // Type assertion to tell TypeScript this is safe
+        setNotes(data as CourseNote[]);
+      } else {
+        setNotes([]);
+      }
     } catch (error) {
       console.error("Exception fetching notes:", error);
     }
@@ -74,7 +79,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       if (isEditing && currentNoteId) {
         // Update existing note
         const { error } = await supabase
-          .from('course_notes' as any)
+          .from('course_notes')
           .update({
             title,
             content,
@@ -92,7 +97,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       } else {
         // Create new note
         const { error } = await supabase
-          .from('course_notes' as any)
+          .from('course_notes')
           .insert([{
             user_id: user.id,
             course_id: courseId,
@@ -134,7 +139,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       if (!user) return;
 
       const { error } = await supabase
-        .from('course_notes' as any)
+        .from('course_notes')
         .delete()
         .eq('id', noteId)
         .eq('user_id', user.id);
