@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,11 +42,9 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
   
-  // Generate or fetch assessment using the OpenAI API via edge function
   const handleStartAssessment = async () => {
     setLoading(true);
     try {
-      // Call the generateAssessment edge function
       const response = await fetch('/api/generate-assessment', {
         method: 'POST',
         headers: {
@@ -70,25 +67,21 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       
       if (result.assessment) {
         setAssessment(result.assessment);
-        // Initialize answers array with -1 (no answer selected)
         setAnswers(new Array(result.assessment.questions.length).fill(-1));
         setShowResults(false);
         setScore(0);
       } else {
-        // Fallback to static generation if API fails
         generateStaticAssessment();
       }
     } catch (error) {
       console.error("Error generating assessment:", error);
       toast.error("Failed to connect to AI service. Using local generation instead.");
-      // Fallback to static generation
       generateStaticAssessment();
     } finally {
       setLoading(false);
     }
   };
   
-  // Fallback static assessment generator
   const generateStaticAssessment = () => {
     const questionCount = selectedDifficulty === 'beginner' ? 5 : 
                           selectedDifficulty === 'intermediate' ? 8 : 10;
@@ -102,7 +95,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         `Option C for question ${index + 1}`,
         `Option D for question ${index + 1}`
       ],
-      correctAnswer: Math.floor(Math.random() * 4) // Random correct answer
+      correctAnswer: Math.floor(Math.random() * 4)
     }));
     
     const generatedAssessment = {
@@ -119,24 +112,20 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     setScore(0);
   };
   
-  // Handle answer selection
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
     const newAnswers = [...answers];
     newAnswers[questionIndex] = answerIndex;
     setAnswers(newAnswers);
   };
   
-  // Submit assessment for grading
   const handleSubmitAssessment = () => {
     if (!assessment) return;
     
-    // Check if all questions have been answered
     if (answers.includes(-1)) {
       toast.error("Please answer all questions before submitting.");
       return;
     }
     
-    // Calculate score
     let correctAnswers = 0;
     answers.forEach((answer, index) => {
       if (answer === assessment.questions[index].correctAnswer) {
@@ -148,10 +137,8 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     setScore(finalScore);
     setShowResults(true);
     
-    // Save assessment result to Supabase
     saveAssessmentResult(finalScore);
     
-    // Show toast notification based on score
     if (finalScore >= 80) {
       toast.success(`Congratulations! You scored ${finalScore}%`);
     } else if (finalScore >= 60) {
@@ -161,32 +148,31 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     }
   };
   
-  // Save assessment results to the database
   const saveAssessmentResult = async (score: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      // Save assessment result
-      const { error } = await supabase
-        .from('assessment_results')
+      const { error } = await (supabase
+        .from('assessment_results' as any)
         .insert({
           user_id: user.id,
           course_id: courseId,
           score,
           difficulty: selectedDifficulty,
           completed_at: new Date().toISOString()
-        });
+        }));
       
       if (error) {
         console.error("Error saving assessment result:", error);
+        toast.error("Failed to save assessment result");
       }
     } catch (error) {
       console.error("Error in saveAssessmentResult:", error);
+      toast.error("An error occurred while saving your result");
     }
   };
   
-  // Start a new assessment
   const handleRestartAssessment = () => {
     setAssessment(null);
     setAnswers([]);
