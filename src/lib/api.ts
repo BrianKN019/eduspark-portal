@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Badge, Certificate, LeaderboardEntry, UserAchievements } from '@/types/achievements';
 

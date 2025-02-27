@@ -13,6 +13,8 @@ interface CourseNote {
   title: string;
   content: string;
   created_at: string;
+  user_id: string;
+  course_id: string;
 }
 
 interface CourseNotesProps {
@@ -36,8 +38,9 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Use any() to cast the table name since course_notes is new
       const { data, error } = await supabase
-        .from('course_notes')
+        .from('course_notes' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
@@ -48,7 +51,8 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
         return;
       }
 
-      setNotes(data || []);
+      // Cast the data to CourseNote[] to ensure type safety
+      setNotes(data as CourseNote[] || []);
     } catch (error) {
       console.error("Exception fetching notes:", error);
     }
@@ -70,7 +74,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       if (isEditing && currentNoteId) {
         // Update existing note
         const { error } = await supabase
-          .from('course_notes')
+          .from('course_notes' as any)
           .update({
             title,
             content,
@@ -88,7 +92,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       } else {
         // Create new note
         const { error } = await supabase
-          .from('course_notes')
+          .from('course_notes' as any)
           .insert([{
             user_id: user.id,
             course_id: courseId,
@@ -130,7 +134,7 @@ const CourseNotes: React.FC<CourseNotesProps> = ({ courseId }) => {
       if (!user) return;
 
       const { error } = await supabase
-        .from('course_notes')
+        .from('course_notes' as any)
         .delete()
         .eq('id', noteId)
         .eq('user_id', user.id);
