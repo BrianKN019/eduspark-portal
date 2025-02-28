@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assessment_results: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          created_at: string | null
+          difficulty: string
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          created_at?: string | null
+          difficulty: string
+          id?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string | null
+          difficulty?: string
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -127,6 +165,7 @@ export type Database = {
       }
       course_progress: {
         Row: {
+          assessment_score: number | null
           completed: boolean | null
           completed_lessons: number[] | null
           course_id: string | null
@@ -136,6 +175,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          assessment_score?: number | null
           completed?: boolean | null
           completed_lessons?: number[] | null
           course_id?: string | null
@@ -145,6 +185,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          assessment_score?: number | null
           completed?: boolean | null
           completed_lessons?: number[] | null
           course_id?: string | null
