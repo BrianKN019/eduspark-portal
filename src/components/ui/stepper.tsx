@@ -2,7 +2,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
+interface StepperProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   defaultValue?: number
   value?: number
   onChange?: (value: number) => void

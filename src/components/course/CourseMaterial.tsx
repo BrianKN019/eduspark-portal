@@ -42,7 +42,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
           .single();
           
         if (!error && data && data.completed_lessons) {
-          setCompletedLessons(data.completed_lessons);
+          setCompletedLessons(data.completed_lessons || []);
         }
       } catch (e) {
         console.error("Error fetching completed lessons:", e);
@@ -125,7 +125,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   const isCompletable = (currentLessonIndex + 1) <= maxAccessibleLesson;
   
   // Check if current lesson is already completed
-  const isLessonCompleted = (index: number) => completedLessons.includes(index);
+  const isLessonCompleted = (index: number) => Array.isArray(completedLessons) && completedLessons.includes(index);
   
   return (
     <div className="space-y-6">

@@ -157,7 +157,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       // Get the current course progress
       const { data: progressData, error: progressError } = await supabase
         .from('course_progress')
-        .select('progress_percentage, completed_lessons, assessment_score')
+        .select('progress_percentage, assessment_score')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .single();
@@ -169,15 +169,13 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       }
       
       // Calculate the new progress percentage
-      let newProgressPercentage = progressData.progress_percentage || 0;
+      let newProgressPercentage = progressData?.progress_percentage || 0;
       
       // If the assessment score is >= 70%, contribute 30% to the course progress
       if (score >= 70) {
         // Lesson completion contributes 70% and assessment contributes 30%
         // Calculate the lesson portion of the progress (which is already in progressData)
-        const lessonPortion = progressData.completed_lessons?.length 
-          ? (progressData.completed_lessons.length / 10) * 70  // Assuming 10 lessons per course
-          : 0;
+        const lessonPortion = Math.min(70, newProgressPercentage);
         
         // Add the assessment portion (30%) for a passing score
         newProgressPercentage = Math.min(100, Math.round(lessonPortion + 30));
