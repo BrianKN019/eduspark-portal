@@ -13,7 +13,9 @@ import { supabase } from '@/integrations/supabase/client';
 interface CourseAssessmentProps {
   courseId: string;
   courseName: string;
-  onAssessmentComplete: (score: number) => void;
+  field: string;
+  level: string;
+  onAssessmentComplete?: (score: number) => void;
 }
 
 interface Question {
@@ -34,7 +36,9 @@ interface Assessment {
 const CourseAssessment: React.FC<CourseAssessmentProps> = ({ 
   courseId, 
   courseName,
-  onAssessmentComplete 
+  field,
+  level,
+  onAssessmentComplete = () => {} // Provide default empty function
 }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('beginner');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +59,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       
       // Use a type assertion since we just created this table
       // and TypeScript doesn't know about it yet
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('assessment_results')
         .select('*')
         .eq('user_id', user.id)
@@ -202,9 +206,8 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         }
       }
       
-      // Save the assessment result - use a type assertion here since the table was just created
-      // and may not be in the TypeScript types yet
-      const { error } = await (supabase as any)
+      // Save the assessment result
+      const { error } = await supabase
         .from('assessment_results')
         .insert({
           user_id: user.id,
@@ -461,3 +464,4 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
 };
 
 export default CourseAssessment;
+
