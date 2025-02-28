@@ -128,6 +128,7 @@ export type Database = {
       course_progress: {
         Row: {
           completed: boolean | null
+          completed_lessons: number[] | null
           course_id: string | null
           id: string
           last_accessed: string | null
@@ -136,6 +137,7 @@ export type Database = {
         }
         Insert: {
           completed?: boolean | null
+          completed_lessons?: number[] | null
           course_id?: string | null
           id?: string
           last_accessed?: string | null
@@ -144,6 +146,7 @@ export type Database = {
         }
         Update: {
           completed?: boolean | null
+          completed_lessons?: number[] | null
           course_id?: string | null
           id?: string
           last_accessed?: string | null

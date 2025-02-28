@@ -41,8 +41,8 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
           .eq('course_id', course?.id)
           .single();
           
-        if (!error && data && data.completed_lessons) {
-          setCompletedLessons(data.completed_lessons || []);
+        if (!error && data) {
+          setCompletedLessons(Array.isArray(data.completed_lessons) ? data.completed_lessons : []);
         }
       } catch (e) {
         console.error("Error fetching completed lessons:", e);

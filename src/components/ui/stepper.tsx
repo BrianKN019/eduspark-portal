@@ -1,4 +1,6 @@
 
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -7,42 +9,47 @@ interface StepperProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onCha
   value?: number
   onChange?: (value: number) => void
   orientation?: "horizontal" | "vertical"
-  children: React.ReactNode
 }
-
-interface StepperContextValue {
-  value: number
-  setValue: (value: number) => void
-  orientation: "horizontal" | "vertical"
-}
-
-const StepperContext = React.createContext<StepperContextValue | undefined>(undefined)
 
 const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
-  ({ className, defaultValue = 1, value, onChange, orientation = "horizontal", children, ...props }, ref) => {
-    const [internalValue, setInternalValue] = React.useState(defaultValue)
-    const actualValue = value !== undefined ? value : internalValue
-    
-    const setValue = React.useCallback((newValue: number) => {
-      setInternalValue(newValue)
-      onChange?.(newValue)
-    }, [onChange])
+  ({ className, defaultValue, value, onChange, orientation = "horizontal", ...props }, ref) => {
+    const [step, setStep] = React.useState(value || defaultValue || 1)
+
+    const handleStepChange = React.useCallback(
+      (step: number) => {
+        setStep(step)
+        onChange?.(step)
+      },
+      [onChange]
+    )
+
+    React.useEffect(() => {
+      if (value) {
+        setStep(value)
+      }
+    }, [value])
 
     return (
-      <StepperContext.Provider value={{ value: actualValue, setValue, orientation }}>
-        <div 
-          ref={ref} 
-          className={cn(
-            "group/stepper",
-            orientation === "horizontal" ? "flex items-center justify-between" : "flex flex-col",
-            className
-          )} 
-          data-orientation={orientation}
-          {...props}
-        >
-          {children}
-        </div>
-      </StepperContext.Provider>
+      <div
+        ref={ref}
+        className={cn(
+          "group/stepper",
+          orientation === "horizontal" ? "flex w-full flex-row justify-between" : "flex w-full flex-col gap-2",
+          className
+        )}
+        data-orientation={orientation}
+        {...props}
+      >
+        {React.Children.map(props.children, (child) => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, {
+              value: step,
+              onValueChange: handleStepChange,
+            })
+          }
+          return child
+        })}
+      </div>
     )
   }
 )
@@ -50,134 +57,46 @@ Stepper.displayName = "Stepper"
 
 interface StepperItemProps extends React.HTMLAttributes<HTMLDivElement> {
   step: number
+  value?: number
   completed?: boolean
-  children: React.ReactNode
+  onValueChange?: (value: number) => void
 }
 
 const StepperItem = React.forwardRef<HTMLDivElement, StepperItemProps>(
-  ({ className, step, completed, children, ...props }, ref) => {
-    const context = React.useContext(StepperContext)
-    if (!context) {
-      throw new Error("StepperItem must be used within a Stepper")
-    }
-
-    const isActive = step === context.value
-    const isCompleted = completed || step < context.value
+  ({ className, step, value, onValueChange, completed = false, ...props }, ref) => {
+    const isActive = value === step
+    const isCompleted = completed || (value != null && step < value)
 
     return (
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
+        data-active={isActive}
+        data-completed={isCompleted}
         className={cn(
-          "flex",
-          context.orientation === "horizontal" ? "flex-col" : "flex-row",
+          "group/stepper-item",
+          "relative flex",
           className
-        )} 
-        data-active={isActive ? "true" : undefined}
-        data-completed={isCompleted ? "true" : undefined}
+        )}
         {...props}
-      >
-        {children}
-      </div>
+      />
     )
   }
 )
 StepperItem.displayName = "StepperItem"
 
-interface StepperTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode
-}
-
-const StepperTrigger = React.forwardRef<HTMLButtonElement, StepperTriggerProps>(
-  ({ className, children, ...props }, ref) => {
-    const context = React.useContext(StepperContext)
-    if (!context) {
-      throw new Error("StepperTrigger must be used within a Stepper")
-    }
-
-    return (
-      <button 
-        ref={ref} 
-        className={cn(
-          "flex items-center gap-2",
-          className
-        )} 
-        {...props}
-      >
-        {children}
-      </button>
-    )
-  }
-)
-StepperTrigger.displayName = "StepperTrigger"
-
-interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
-  children?: React.ReactNode
-}
-
-const StepperIndicator = React.forwardRef<HTMLDivElement, StepperIndicatorProps>(
-  ({ className, children, ...props }, ref) => {
-    const stepItem = React.useContext(StepperItemContext)
-    
-    return (
-      <div 
-        ref={ref} 
-        className={cn(
-          "flex h-6 w-6 items-center justify-center rounded-full border text-sm transition-colors",
-          "group-data-[active=true]/stepper-item:border-primary group-data-[active=true]/stepper-item:bg-primary group-data-[active=true]/stepper-item:text-primary-foreground",
-          "group-data-[completed=true]/stepper-item:border-primary group-data-[completed=true]/stepper-item:bg-primary group-data-[completed=true]/stepper-item:text-primary-foreground",
-          className
-        )} 
-        {...props}
-      >
-        {children || (stepItem?.step || "")}
-      </div>
-    )
-  }
-)
-StepperIndicator.displayName = "StepperIndicator"
-
-interface StepperTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
-  children: React.ReactNode
-}
-
-const StepperTitle = React.forwardRef<HTMLHeadingElement, StepperTitleProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
-      <h3 
-        ref={ref} 
-        className={cn(
-          "text-sm font-medium",
-          className
-        )} 
-        {...props}
-      >
-        {children}
-      </h3>
-    )
-  }
-)
-StepperTitle.displayName = "StepperTitle"
-
 interface StepperSeparatorProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const StepperSeparator = React.forwardRef<HTMLDivElement, StepperSeparatorProps>(
   ({ className, ...props }, ref) => {
-    const context = React.useContext(StepperContext)
-    if (!context) {
-      throw new Error("StepperSeparator must be used within a Stepper")
-    }
-
     return (
-      <div 
-        ref={ref} 
+      <div
+        ref={ref}
         className={cn(
-          "absolute",
-          context.orientation === "horizontal" 
-            ? "top-3 left-0 h-px w-full" 
-            : "left-3 top-0 w-px h-full",
-          "bg-primary/20 group-data-[completed=true]/stepper-item:bg-primary",
+          "group-data-[orientation=horizontal]/stepper:h-[1px] group-data-[orientation=horizontal]/stepper:w-full",
+          "group-data-[orientation=vertical]/stepper:h-full group-data-[orientation=vertical]/stepper:w-[1px]",
+          "bg-border group-data-[completed]/stepper-item:bg-primary",
           className
-        )} 
+        )}
         {...props}
       />
     )
@@ -185,29 +104,90 @@ const StepperSeparator = React.forwardRef<HTMLDivElement, StepperSeparatorProps>
 )
 StepperSeparator.displayName = "StepperSeparator"
 
-// Context for StepperItem to pass step value to StepperIndicator
-interface StepperItemContextValue {
-  step: number
-}
+interface StepperTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
-const StepperItemContext = React.createContext<StepperItemContextValue | undefined>(undefined)
+const StepperTrigger = React.forwardRef<HTMLButtonElement, StepperTriggerProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        role="tab"
+        className={cn(
+          "flex max-w-full items-center gap-2 px-2 py-1 text-muted-foreground",
+          "group-data-[completed]/stepper-item:text-foreground group-data-[active]/stepper-item:text-foreground",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+StepperTrigger.displayName = "StepperTrigger"
 
-// Wrap the StepperItem to provide context
-const WrappedStepperItem: React.FC<StepperItemProps> = ({ children, step, ...props }) => {
-  return (
-    <StepperItemContext.Provider value={{ step }}>
-      <StepperItem step={step} {...props} className="group/stepper-item">
-        {children}
-      </StepperItem>
-    </StepperItemContext.Provider>
-  )
-}
+interface StepperIndicatorProps extends React.HTMLAttributes<HTMLSpanElement> {}
+
+const StepperIndicator = React.forwardRef<HTMLSpanElement, StepperIndicatorProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <span
+        ref={ref}
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-center text-xs",
+          "bg-background text-foreground",
+          "group-data-[active]/stepper-item:border-primary group-data-[active]/stepper-item:text-primary",
+          "group-data-[completed]/stepper-item:border-primary group-data-[completed]/stepper-item:bg-primary group-data-[completed]/stepper-item:text-primary-foreground",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+StepperIndicator.displayName = "StepperIndicator"
+
+interface StepperTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+
+const StepperTitle = React.forwardRef<HTMLHeadingElement, StepperTitleProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <h3
+        ref={ref}
+        className={cn(
+          "text-sm font-medium",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+StepperTitle.displayName = "StepperTitle"
+
+interface StepperContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const StepperContent = React.forwardRef<HTMLDivElement, StepperContentProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "group-data-[orientation=horizontal]/stepper:mt-2",
+          "group-data-[orientation=vertical]/stepper:ml-8 group-data-[orientation=vertical]/stepper:pt-1 group-data-[orientation=vertical]/stepper:pl-4",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+StepperContent.displayName = "StepperContent"
 
 export {
   Stepper,
-  WrappedStepperItem as StepperItem,
+  StepperItem,
+  StepperSeparator,
   StepperTrigger,
   StepperIndicator,
   StepperTitle,
-  StepperSeparator,
+  StepperContent,
 }

@@ -227,7 +227,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       
       // Save the assessment result
       const { error } = await (supabase
-        .from('assessment_results' as any)
+        .from('assessment_results')
         .insert({
           user_id: user.id,
           course_id: courseId,
