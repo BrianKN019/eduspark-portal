@@ -43,9 +43,10 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
         {React.Children.map(props.children, (child) => {
           if (React.isValidElement(child)) {
             return React.cloneElement(child, {
+              // Only pass allowed props to avoid object literal type error
               value: step,
               onValueChange: handleStepChange,
-            })
+            } as React.ComponentProps<typeof StepperItem>)
           }
           return child
         })}

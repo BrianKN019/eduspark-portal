@@ -157,12 +157,12 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       // Get the current course progress
       const { data: progressData, error: progressError } = await supabase
         .from('course_progress')
-        .select('progress_percentage, assessment_score')
+        .select('*')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .single();
       
-      if (progressError) {
+      if (progressError && !progressError.message.includes('No rows found')) {
         console.error("Error fetching course progress:", progressError);
         toast.error("Failed to save assessment result");
         return;
@@ -208,14 +208,14 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         }
       } else {
         // Just save the assessment score without updating progress
-        const { error: updateError } = await (supabase
+        const { error: updateError } = await supabase
           .from('course_progress')
           .update({
             assessment_score: score,
             last_accessed: new Date().toISOString()
           })
           .eq('user_id', user.id)
-          .eq('course_id', courseId));
+          .eq('course_id', courseId);
           
         if (updateError) {
           console.error("Error updating assessment score:", updateError);
@@ -225,8 +225,9 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         }
       }
       
-      // Save the assessment result
-      const { error } = await (supabase
+      // Save the assessment result - use a type assertion here since the table was just created
+      // and may not be in the TypeScript types yet
+      const { error } = await (supabase as any)
         .from('assessment_results')
         .insert({
           user_id: user.id,
@@ -234,7 +235,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
           score,
           difficulty: selectedDifficulty,
           completed_at: new Date().toISOString()
-        }));
+        });
       
       if (error) {
         console.error("Error saving assessment result:", error);
