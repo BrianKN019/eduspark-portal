@@ -77,6 +77,45 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_all_day: boolean | null
+          priority: string | null
+          start_date: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          priority?: string | null
+          start_date: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_all_day?: boolean | null
+          priority?: string | null
+          start_date?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           course_id: string | null
@@ -507,6 +546,42 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          color: string | null
+          completed: boolean | null
+          created_at: string | null
+          due_date: string | null
+          favorite: boolean | null
+          id: string
+          priority: string | null
+          text: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          favorite?: boolean | null
+          id?: string
+          priority?: string | null
+          text: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          completed?: boolean | null
+          created_at?: string | null
+          due_date?: string | null
+          favorite?: boolean | null
+          id?: string
+          priority?: string | null
+          text?: string
+          user_id?: string | null
         }
         Relationships: []
       }

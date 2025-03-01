@@ -26,6 +26,20 @@ interface Event {
   isAllDay?: boolean;
 }
 
+// Define a type for the calendar events from the database
+interface CalendarEventData {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date?: string;
+  color: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  is_all_day: boolean;
+  user_id: string;
+  created_at: string;
+}
+
 const InteractiveCalendar: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>({
@@ -52,6 +66,7 @@ const InteractiveCalendar: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Explicitly type the response data
         const { data, error } = await supabase
           .from('calendar_events')
           .select('*')
@@ -64,7 +79,9 @@ const InteractiveCalendar: React.FC = () => {
         }
         
         if (data) {
-          const formattedEvents = data.map(event => ({
+          // Use type assertion to help TypeScript understand the data
+          const eventsData = data as CalendarEventData[];
+          const formattedEvents = eventsData.map(event => ({
             id: event.id,
             title: event.title,
             start: new Date(event.start_date),
@@ -128,8 +145,7 @@ const InteractiveCalendar: React.FC = () => {
       const { data, error } = await supabase
         .from('calendar_events')
         .insert([eventData])
-        .select()
-        .single();
+        .select();
         
       if (error) {
         console.error('Error saving event:', error);
@@ -138,7 +154,7 @@ const InteractiveCalendar: React.FC = () => {
       }
       
       toast.success('Event saved successfully');
-      return data;
+      return data[0] as CalendarEventData;
     } catch (error) {
       console.error('Error saving event:', error);
       toast.error('Failed to save event');

@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface Todo {
-  id: number | string;
+  id: string;
   text: string;
   completed: boolean;
   color: string;
@@ -20,6 +20,19 @@ interface Todo {
   dueDate?: Date;
   created_at?: string;
   favorite?: boolean;
+}
+
+// Define a type for the task data from the database
+interface TaskData {
+  id: string;
+  text: string;
+  completed: boolean;
+  color: string;
+  priority: 'low' | 'medium' | 'high';
+  due_date?: string;
+  created_at: string;
+  user_id: string;
+  favorite: boolean;
 }
 
 const NeumorphicTodoList: React.FC = () => {
@@ -42,6 +55,7 @@ const NeumorphicTodoList: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Explicitly type the response data
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -55,7 +69,9 @@ const NeumorphicTodoList: React.FC = () => {
         }
         
         if (data) {
-          const formattedTodos = data.map(todo => ({
+          // Use type assertion to help TypeScript understand the data
+          const tasksData = data as TaskData[];
+          const formattedTodos = tasksData.map(todo => ({
             id: todo.id,
             text: todo.text,
             completed: todo.completed,
@@ -99,8 +115,7 @@ const NeumorphicTodoList: React.FC = () => {
       const { data, error } = await supabase
         .from('tasks')
         .insert([todoData])
-        .select()
-        .single();
+        .select();
         
       if (error) {
         console.error('Error saving task:', error);
@@ -109,7 +124,7 @@ const NeumorphicTodoList: React.FC = () => {
       }
       
       toast.success('Task added successfully');
-      return data;
+      return data[0] as TaskData;
     } catch (error) {
       console.error('Error saving task:', error);
       toast.error('Failed to save task');
@@ -117,7 +132,7 @@ const NeumorphicTodoList: React.FC = () => {
     }
   };
 
-  const updateTodo = async (id: number | string, updates: Partial<Todo>) => {
+  const updateTodo = async (id: string, updates: Partial<Todo>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -155,7 +170,7 @@ const NeumorphicTodoList: React.FC = () => {
     }
   };
 
-  const deleteTodo = async (id: number | string) => {
+  const deleteTodo = async (id: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
