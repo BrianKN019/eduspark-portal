@@ -254,7 +254,7 @@ export const updateCourseProgress = async (courseId: string, progress: number, c
       progress_percentage: progress,
       completed: progress === 100,
       last_accessed: new Date().toISOString(),
-      current_lesson_index: currentLessonIndex !== undefined ? currentLessonIndex : existingProgress?.current_lesson_index
+      current_lesson_index: currentLessonIndex !== undefined ? currentLessonIndex : existingProgress?.current_lesson_index || 0
     };
     
     console.log("Upserting progress data:", progressData);

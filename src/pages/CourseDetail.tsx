@@ -277,7 +277,6 @@ const CourseDetail = () => {
         <TabsContent value="materials">
           <CourseMaterial 
             courseId={courseId || ''}
-            lessons={lessons}
             currentLessonIndex={currentLessonIndex}
             setCurrentLessonIndex={setCurrentLessonIndex}
             onLessonComplete={handleLessonComplete}

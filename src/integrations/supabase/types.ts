@@ -169,6 +169,7 @@ export type Database = {
           completed: boolean | null
           completed_lessons: number[] | null
           course_id: string | null
+          current_lesson_index: number | null
           id: string
           last_accessed: string | null
           progress_percentage: number | null
@@ -179,6 +180,7 @@ export type Database = {
           completed?: boolean | null
           completed_lessons?: number[] | null
           course_id?: string | null
+          current_lesson_index?: number | null
           id?: string
           last_accessed?: string | null
           progress_percentage?: number | null
@@ -189,6 +191,7 @@ export type Database = {
           completed?: boolean | null
           completed_lessons?: number[] | null
           course_id?: string | null
+          current_lesson_index?: number | null
           id?: string
           last_accessed?: string | null
           progress_percentage?: number | null
@@ -471,25 +474,37 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          location: string | null
+          occupation: string | null
+          phone: string | null
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          location?: string | null
+          occupation?: string | null
+          phone?: string | null
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          location?: string | null
+          occupation?: string | null
+          phone?: string | null
           updated_at?: string | null
           username?: string | null
         }
