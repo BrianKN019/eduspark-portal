@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Phone, MapPin, Briefcase, Book, Save, X, LogOut } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Progress } from "@/components/ui/progress";
 import { useNavigate } from 'react-router-dom';
+import PersonalInfo from '@/components/profile/PersonalInfo';
+import BioSection from '@/components/profile/BioSection';
+import CourseProgressList from '@/components/profile/CourseProgressList';
 
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -141,10 +138,6 @@ const Profile: React.FC = () => {
     fetchUserProfile(); // Reset form to original values
   };
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('');
-  };
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center mb-4">
@@ -160,182 +153,23 @@ const Profile: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="neumorphic-card shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">
-            <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center pt-6 pb-6">
-            <Avatar className="h-24 w-24 mb-4 border-4 border-purple-200 dark:border-purple-900">
-              {userProfile.avatar_url ? (
-                <AvatarImage src={userProfile.avatar_url} alt={userProfile.name} />
-              ) : (
-                <AvatarImage 
-                  src={`https://api.dicebear.com/6.x/initials/svg?seed=${userProfile.name}`} 
-                  alt={userProfile.name} 
-                />
-              )}
-              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                {getInitials(userProfile.name)}
-              </AvatarFallback>
-            </Avatar>
-            
-            {isEditing ? (
-              <div className="w-full space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={userProfile.name}
-                    onChange={handleInputChange}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    value={userProfile.email}
-                    readOnly
-                    disabled
-                    className="w-full bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500">Email cannot be changed</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={userProfile.phone}
-                    onChange={handleInputChange}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-sm font-medium">Location</Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={userProfile.location}
-                    onChange={handleInputChange}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="occupation" className="text-sm font-medium">Occupation</Label>
-                  <Input
-                    id="occupation"
-                    name="occupation"
-                    value={userProfile.occupation}
-                    onChange={handleInputChange}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="flex space-x-2 mt-4">
-                  <Button 
-                    onClick={handleSaveProfile} 
-                    className="w-full bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white flex items-center justify-center"
-                    disabled={loading}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleCancelEdit} 
-                    variant="outline" 
-                    className="w-full border-red-300 text-red-600 hover:bg-red-50 flex items-center justify-center"
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <h3 className="text-2xl font-semibold mb-2">{userProfile.name}</h3>
-                <p className="text-muted-foreground mb-4">{userProfile.occupation}</p>
-                <div className="w-full space-y-3">
-                  <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <Mail className="h-4 w-4 text-blue-500" /> {userProfile.email}
-                  </p>
-                  <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <Phone className="h-4 w-4 text-blue-500" /> {userProfile.phone || 'Not specified'}
-                  </p>
-                  <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <MapPin className="h-4 w-4 text-blue-500" /> {userProfile.location || 'Not specified'}
-                  </p>
-                  <p className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <Briefcase className="h-4 w-4 text-blue-500" /> {userProfile.occupation || 'Not specified'}
-                  </p>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <PersonalInfo
+          userProfile={userProfile}
+          isEditing={isEditing}
+          loading={loading}
+          handleInputChange={handleInputChange}
+          handleSaveProfile={handleSaveProfile}
+          handleCancelEdit={handleCancelEdit}
+        />
         
-        <Card className="neumorphic-card shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">
-            <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">Bio</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6 pb-6">
-            {isEditing ? (
-              <div className="space-y-2">
-                <Label htmlFor="bio" className="text-sm font-medium">About Me</Label>
-                <Textarea
-                  id="bio"
-                  name="bio"
-                  value={userProfile.bio}
-                  onChange={handleInputChange}
-                  className="w-full min-h-[150px]"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-            ) : (
-              <p className="text-gray-700 dark:text-gray-300">
-                {userProfile.bio || "No bio information provided yet."}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <BioSection
+          bio={userProfile.bio}
+          isEditing={isEditing}
+          handleInputChange={handleInputChange}
+        />
       </div>
       
-      <Card className="neumorphic-card shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">
-          <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">
-            Course Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6 pb-6">
-          {courseProgresses.length > 0 ? (
-            <div className="space-y-6">
-              {courseProgresses.map((progress) => (
-                <div key={progress.id} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Book className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">{progress.courses?.title || 'Course'}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-blue-600">
-                      {progress.progress_percentage}% Complete
-                    </span>
-                  </div>
-                  <Progress value={progress.progress_percentage} className="h-2" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">No courses enrolled yet.</p>
-          )}
-        </CardContent>
-      </Card>
+      <CourseProgressList courseProgresses={courseProgresses} />
       
       {!isEditing && (
         <Button 
