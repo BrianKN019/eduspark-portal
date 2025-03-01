@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -25,14 +24,12 @@ const CourseDetail = () => {
   const [hasCompletedCourse, setHasCompletedCourse] = useState(false);
   const [hasCertificate, setHasCertificate] = useState(false);
 
-  // Fetch course details
   const { data: course, isLoading, error } = useQuery({
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId || ''),
     enabled: !!courseId,
   });
 
-  // Fetch user's progress for this course
   const { data: progress, refetch: refetchProgress } = useQuery({
     queryKey: ['courseProgress', courseId],
     queryFn: async () => {
@@ -63,7 +60,6 @@ const CourseDetail = () => {
     enabled: !!courseId,
   });
 
-  // Fetch user's certificate for this course
   const { data: certificate } = useQuery({
     queryKey: ['certificate', courseId],
     queryFn: async () => {
@@ -99,7 +95,6 @@ const CourseDetail = () => {
       setUserProgress(progress.progress_percentage);
       setIsEnrolled(true);
       setHasCompletedCourse(progress.completed);
-      // If progress has a currentLessonIndex, update it
       if (progress.current_lesson_index !== undefined) {
         setCurrentLessonIndex(progress.current_lesson_index);
       }
@@ -110,7 +105,6 @@ const CourseDetail = () => {
     }
   }, [progress, certificate]);
 
-  // Handle enrollment
   const handleEnroll = async () => {
     try {
       if (!courseId) return;
@@ -126,12 +120,10 @@ const CourseDetail = () => {
     }
   };
 
-  // Handle lesson completion
   const handleLessonComplete = async (lessonIndex: number) => {
     try {
       if (!courseId || !course) return;
       
-      // Calculate new progress percentage based on lessons completed
       const totalLessons = course.lessons_count;
       const newProgress = Math.min(Math.round(((lessonIndex + 1) / totalLessons) * 100), 100);
       
@@ -185,7 +177,6 @@ const CourseDetail = () => {
 
   return (
     <div className="container mx-auto py-6 px-4 space-y-8">
-      {/* Header and Navigation */}
       <div className="flex items-center space-x-4">
         <Button 
           variant="outline"
@@ -196,7 +187,6 @@ const CourseDetail = () => {
         </Button>
       </div>
       
-      {/* Course Header */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <h1 className="text-3xl font-bold">{course.title}</h1>
@@ -211,7 +201,7 @@ const CourseDetail = () => {
               <Users className="mr-1 h-4 w-4" />
               {course.level}
             </span>
-            <span className="inline-flex items-center text-sm bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 px-3 py-1 rounded-full">
+            <span className="inline-flex items-center text-sm bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-800 px-3 py-1 rounded-full">
               <Clock className="mr-1 h-4 w-4" />
               {course.lessons_count} Lessons
             </span>
@@ -268,57 +258,55 @@ const CourseDetail = () => {
         </div>
       </div>
       
-      {/* Course Content */}
-      {isEnrolled && (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
-            <TabsTrigger value="materials" className="flex items-center">
-              <BookOpen className="mr-2 h-4 w-4" /> Materials
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center">
-              <FileText className="mr-2 h-4 w-4" /> Notes
-            </TabsTrigger>
-            <TabsTrigger value="assessments" className="flex items-center">
-              <BrainCircuit className="mr-2 h-4 w-4" /> Assessments
-            </TabsTrigger>
-            <TabsTrigger value="certificate" className="flex items-center" disabled={!hasCompletedCourse}>
-              <Award className="mr-2 h-4 w-4" /> Certificate
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="materials">
-            <CourseMaterial 
-              courseId={courseId || ''}
-              lessons={lessons}
-              currentLessonIndex={currentLessonIndex}
-              setCurrentLessonIndex={setCurrentLessonIndex}
-              onLessonComplete={handleLessonComplete}
-              userProgress={userProgress}
-            />
-          </TabsContent>
-          
-          <TabsContent value="notes">
-            <CourseNotes courseId={courseId || ''} />
-          </TabsContent>
-          
-          <TabsContent value="assessments">
-            <CourseAssessment 
-              courseId={courseId || ''} 
-              courseName={course.title}
-              field={course.field}
-              level={course.level}
-            />
-          </TabsContent>
-          
-          <TabsContent value="certificate">
-            <Certificate 
-              courseId={courseId || ''} 
-              courseName={course.title} 
-              completionDate={certificate?.earned_date || new Date().toISOString()}
-            />
-          </TabsContent>
-        </Tabs>
-      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
+          <TabsTrigger value="materials" className="flex items-center">
+            <BookOpen className="mr-2 h-4 w-4" /> Materials
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="flex items-center">
+            <FileText className="mr-2 h-4 w-4" /> Notes
+          </TabsTrigger>
+          <TabsTrigger value="assessments" className="flex items-center">
+            <BrainCircuit className="mr-2 h-4 w-4" /> Assessments
+          </TabsTrigger>
+          <TabsTrigger value="certificate" className="flex items-center" disabled={!hasCompletedCourse}>
+            <Award className="mr-2 h-4 w-4" /> Certificate
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="materials">
+          <CourseMaterial 
+            courseId={courseId || ''}
+            lessons={lessons}
+            currentLessonIndex={currentLessonIndex}
+            setCurrentLessonIndex={setCurrentLessonIndex}
+            onLessonComplete={handleLessonComplete}
+            userProgress={userProgress}
+            courseName={course.title}
+          />
+        </TabsContent>
+        
+        <TabsContent value="notes">
+          <CourseNotes courseId={courseId || ''} />
+        </TabsContent>
+        
+        <TabsContent value="assessments">
+          <CourseAssessment 
+            courseId={courseId || ''} 
+            courseName={course.title}
+            field={course.field}
+            level={course.level}
+          />
+        </TabsContent>
+        
+        <TabsContent value="certificate">
+          <Certificate 
+            courseId={courseId || ''} 
+            courseName={course.title} 
+            completionDate={certificate?.earned_date || new Date().toISOString()}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

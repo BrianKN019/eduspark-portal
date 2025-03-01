@@ -110,18 +110,27 @@ function calculateResult(data) {
 
 interface CourseMaterialProps {
   courseId: string;
-  courseName: string;
+  lessons?: { title: string; duration: string }[];
+  currentLessonIndex: number;
+  setCurrentLessonIndex: React.Dispatch<React.SetStateAction<number>>;
+  onLessonComplete?: (lessonIndex: number) => Promise<void>;
+  userProgress?: number;
+  courseName?: string;
   initialProgress?: number;
   onProgressUpdate?: (progress: number) => void;
 }
 
 const CourseMaterial: React.FC<CourseMaterialProps> = ({ 
-  courseId, 
-  courseName,
+  courseId,
+  lessons,
+  currentLessonIndex,
+  setCurrentLessonIndex,
+  onLessonComplete,
+  userProgress,
+  courseName = "Course Material",
   initialProgress = 0,
   onProgressUpdate
 }) => {
-  const [currentStep, setCurrentStep] = useState(1);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const totalSteps = courseMaterials.length;
   
@@ -154,7 +163,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
           // Find the first lesson that has not been completed
           for (let i = 0; i < totalSteps; i++) {
             if (!data.completed_lessons.includes(i)) {
-              setCurrentStep(i + 1); // +1 because steps are 1-indexed
+              setCurrentLessonIndex(i + 1); // +1 because steps are 1-indexed
               break;
             }
           }
@@ -198,20 +207,24 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   };
   
   const handleNext = () => {
-    if (currentStep < totalSteps) {
-      markLessonComplete(currentStep - 1);
-      setCurrentStep(currentStep + 1);
+    if (currentLessonIndex < totalSteps) {
+      if (onLessonComplete) {
+        onLessonComplete(currentLessonIndex - 1);
+      } else {
+        markLessonComplete(currentLessonIndex - 1);
+      }
+      setCurrentLessonIndex(currentLessonIndex + 1);
     }
   };
   
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    if (currentLessonIndex > 1) {
+      setCurrentLessonIndex(currentLessonIndex - 1);
     }
   };
   
   const handleStepClick = (step: number) => {
-    setCurrentStep(step);
+    setCurrentLessonIndex(step);
   };
   
   const renderIcon = (index: number) => {
@@ -234,7 +247,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
             <h3 className="font-semibold text-lg mb-4 text-gray-800 dark:text-white">Course Content</h3>
             <Stepper
               orientation="vertical"
-              value={currentStep}
+              value={currentLessonIndex}
               onChange={handleStepClick}
               className="space-y-4"
             >
@@ -263,18 +276,18 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
           <div className="p-6 md:col-span-3">
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                {courseMaterials[currentStep - 1].icon}
-                {courseMaterials[currentStep - 1].title}
+                {courseMaterials[currentLessonIndex - 1].icon}
+                {courseMaterials[currentLessonIndex - 1].title}
               </h3>
               <div className="prose dark:prose-invert max-w-none">
-                {courseMaterials[currentStep - 1].content}
+                {courseMaterials[currentLessonIndex - 1].content}
               </div>
             </div>
             
             <div className="flex justify-between mt-8">
               <Button
                 onClick={handlePrevious}
-                disabled={currentStep === 1}
+                disabled={currentLessonIndex === 1}
                 variant="outline"
                 className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
@@ -282,7 +295,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 Previous
               </Button>
               
-              {currentStep < totalSteps ? (
+              {currentLessonIndex < totalSteps ? (
                 <Button
                   onClick={handleNext}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
@@ -292,11 +305,17 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 </Button>
               ) : (
                 <Button
-                  onClick={() => markLessonComplete(currentStep - 1)}
-                  disabled={completedLessons.includes(currentStep - 1)}
+                  onClick={() => {
+                    if (onLessonComplete) {
+                      onLessonComplete(currentLessonIndex - 1);
+                    } else {
+                      markLessonComplete(currentLessonIndex - 1);
+                    }
+                  }}
+                  disabled={completedLessons.includes(currentLessonIndex - 1)}
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
                 >
-                  {completedLessons.includes(currentStep - 1) ? 
+                  {completedLessons.includes(currentLessonIndex - 1) ? 
                     'Completed' : 
                     'Mark as Complete'}
                   <CheckCircle className="h-4 w-4" />
