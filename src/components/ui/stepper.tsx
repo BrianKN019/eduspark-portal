@@ -3,6 +3,7 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { CheckCircle, Circle } from "lucide-react"
 
 interface StepperProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   defaultValue?: number
@@ -24,7 +25,7 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
     )
 
     React.useEffect(() => {
-      if (value) {
+      if (value !== undefined) {
         setStep(value)
       }
     }, [value])
@@ -34,7 +35,9 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(
         ref={ref}
         className={cn(
           "group/stepper",
-          orientation === "horizontal" ? "flex w-full flex-row justify-between" : "flex w-full flex-col gap-2",
+          orientation === "horizontal" 
+            ? "flex w-full flex-row justify-between" 
+            : "flex w-full flex-col gap-2",
           className
         )}
         data-orientation={orientation}
@@ -93,9 +96,9 @@ const StepperSeparator = React.forwardRef<HTMLDivElement, StepperSeparatorProps>
       <div
         ref={ref}
         className={cn(
-          "group-data-[orientation=horizontal]/stepper:h-[1px] group-data-[orientation=horizontal]/stepper:w-full",
-          "group-data-[orientation=vertical]/stepper:h-full group-data-[orientation=vertical]/stepper:w-[1px]",
-          "bg-border group-data-[completed]/stepper-item:bg-primary",
+          "group-data-[orientation=horizontal]/stepper:h-[2px] group-data-[orientation=horizontal]/stepper:w-full",
+          "group-data-[orientation=vertical]/stepper:h-full group-data-[orientation=vertical]/stepper:w-[2px]",
+          "bg-gray-200 dark:bg-gray-700 group-data-[completed]/stepper-item:bg-green-500 transition-colors duration-300",
           className
         )}
         {...props}
@@ -115,7 +118,9 @@ const StepperTrigger = React.forwardRef<HTMLButtonElement, StepperTriggerProps>(
         role="tab"
         className={cn(
           "flex max-w-full items-center gap-2 px-2 py-1 text-muted-foreground",
-          "group-data-[completed]/stepper-item:text-foreground group-data-[active]/stepper-item:text-foreground",
+          "group-data-[completed]/stepper-item:text-green-600 dark:group-data-[completed]/stepper-item:text-green-500",
+          "group-data-[active]/stepper-item:text-blue-600 dark:group-data-[active]/stepper-item:text-blue-500",
+          "transition-colors duration-300",
           className
         )}
         {...props}
@@ -128,23 +133,56 @@ StepperTrigger.displayName = "StepperTrigger"
 interface StepperIndicatorProps extends React.HTMLAttributes<HTMLSpanElement> {}
 
 const StepperIndicator = React.forwardRef<HTMLSpanElement, StepperIndicatorProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     return (
       <span
         ref={ref}
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-center text-xs",
-          "bg-background text-foreground",
-          "group-data-[active]/stepper-item:border-primary group-data-[active]/stepper-item:text-primary",
-          "group-data-[completed]/stepper-item:border-primary group-data-[completed]/stepper-item:bg-primary group-data-[completed]/stepper-item:text-primary-foreground",
+          "relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+          "border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-center text-sm font-medium",
+          "text-gray-700 dark:text-gray-300",
+          "group-data-[active]/stepper-item:border-blue-600 group-data-[active]/stepper-item:text-blue-600",
+          "group-data-[active]/stepper-item:dark:border-blue-500 group-data-[active]/stepper-item:dark:text-blue-500",
+          "group-data-[completed]/stepper-item:border-green-600 group-data-[completed]/stepper-item:bg-green-100",
+          "group-data-[completed]/stepper-item:dark:border-green-500 group-data-[completed]/stepper-item:dark:bg-green-900",
+          "transition-all duration-300 ease-in-out",
           className
         )}
         {...props}
-      />
+      >
+        {children}
+      </span>
     )
   }
 )
 StepperIndicator.displayName = "StepperIndicator"
+
+interface StepperIconProps extends React.HTMLAttributes<HTMLSpanElement> {
+  step: number
+  value?: number
+}
+
+const StepperIcon = React.forwardRef<HTMLSpanElement, StepperIconProps>(
+  ({ step, value, ...props }, ref) => {
+    const isActive = value === step
+    const isCompleted = value != null && step < value
+
+    return (
+      <span ref={ref} {...props}>
+        {isCompleted ? (
+          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-500" />
+        ) : (
+          isActive ? (
+            <Circle className="h-6 w-6 text-blue-600 dark:text-blue-500 fill-blue-100 dark:fill-blue-900" />
+          ) : (
+            <Circle className="h-6 w-6 text-gray-400 dark:text-gray-600" />
+          )
+        )}
+      </span>
+    )
+  }
+)
+StepperIcon.displayName = "StepperIcon"
 
 interface StepperTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
@@ -172,8 +210,9 @@ const StepperContent = React.forwardRef<HTMLDivElement, StepperContentProps>(
       <div
         ref={ref}
         className={cn(
-          "group-data-[orientation=horizontal]/stepper:mt-2",
-          "group-data-[orientation=vertical]/stepper:ml-8 group-data-[orientation=vertical]/stepper:pt-1 group-data-[orientation=vertical]/stepper:pl-4",
+          "group-data-[orientation=horizontal]/stepper:mt-4",
+          "group-data-[orientation=vertical]/stepper:ml-10 group-data-[orientation=vertical]/stepper:pt-1",
+          "transition-all duration-300 ease-in-out",
           className
         )}
         {...props}
@@ -189,6 +228,7 @@ export {
   StepperSeparator,
   StepperTrigger,
   StepperIndicator,
+  StepperIcon,
   StepperTitle,
   StepperContent,
 }

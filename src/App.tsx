@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
@@ -20,8 +20,8 @@ import Achievements from "./pages/Achievements";
 import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
 import ResourceLibrary from "./pages/ResourceLibrary";
-import { useAuth } from "./contexts/AuthContext";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -30,10 +30,21 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-indigo-900">
+        <div className="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-xl text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-700 dark:text-gray-300">Loading your experience...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
+    toast.error("Please log in to access this page", {
+      id: "auth-redirect",
+      duration: 3000,
+    });
     return <Navigate to="/login" replace />;
   }
 
@@ -63,7 +74,7 @@ const App = () => {
       <ThemeProvider defaultTheme={theme} storageKey="vite-ui-theme">
         <TooltipProvider>
           <AuthProvider>
-            <Toaster />
+            <Toaster position="top-right" richColors />
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<Login />} />

@@ -1,287 +1,312 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Play, Clock, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
-import { Stepper, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from "@/components/ui/stepper";
-import { toast } from "sonner";
+import { Stepper, StepperItem, StepperSeparator, StepperTrigger, StepperIcon, StepperTitle, StepperContent } from "@/components/ui/stepper";
+import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
+import { updateCourseProgress } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface CourseMaterialProps {
-  course: any;
-  lessons: { title: string; duration: string }[];
-  currentLessonIndex: number;
-  setCurrentLessonIndex: (index: number) => void;
-  onLessonComplete: (index: number) => void;
-  userProgress: number;
-}
-
-const CourseMaterial: React.FC<CourseMaterialProps> = ({
-  course,
-  lessons,
-  currentLessonIndex,
-  setCurrentLessonIndex,
-  onLessonComplete,
-  userProgress
-}) => {
-  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
-  const maxAccessibleLesson = Math.ceil((userProgress / 100) * lessons.length);
+// Sample course content structure - in a real app, this would come from an API
+const courseMaterials = [
+  {
+    title: 'Introduction',
+    type: 'video',
+    icon: <Video className="h-5 w-5 text-blue-500" />,
+    content: <div className="prose dark:prose-invert max-w-none">
+      <p>Welcome to this course! In this introduction, we'll cover the basic concepts and what you can expect to learn.</p>
+      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-4 flex items-center justify-center">
+        <Video className="h-10 w-10 text-blue-500 mr-2" />
+        <span className="text-gray-600 dark:text-gray-300">Video content would load here</span>
+      </div>
+      <p>Make sure to complete all modules to get the most out of this course experience.</p>
+    </div>
+  },
+  {
+    title: 'Core Concepts',
+    type: 'text',
+    icon: <FileText className="h-5 w-5 text-green-500" />,
+    content: <div className="prose dark:prose-invert max-w-none">
+      <h3>Important Fundamentals</h3>
+      <p>Let's dive into the core concepts that form the foundation of this subject. These concepts are essential for understanding the more advanced topics we'll cover later.</p>
+      <ul>
+        <li>Concept 1: Basic structures and patterns</li>
+        <li>Concept 2: Key methodologies and approaches</li>
+        <li>Concept 3: Standard practices in the industry</li>
+      </ul>
+      <p>Understanding these fundamentals will help you build a strong mental model of how everything fits together.</p>
+    </div>
+  },
+  {
+    title: 'Practical Examples',
+    type: 'code',
+    icon: <Code className="h-5 w-5 text-purple-500" />,
+    content: <div className="prose dark:prose-invert max-w-none">
+      <h3>Code Examples</h3>
+      <p>Let's look at some practical examples to reinforce the concepts we've learned.</p>
+      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto">
+        <code className="text-sm">
+          {`// Example implementation
+function calculateResult(data) {
+  let result = 0;
   
-  // Fetch completed lessons on component mount
-  useEffect(() => {
-    const fetchCompletedLessons = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        const { data, error } = await supabase
-          .from('course_progress')
-          .select('completed_lessons')
-          .eq('user_id', user.id)
-          .eq('course_id', course?.id)
-          .single();
-          
-        if (!error && data) {
-          setCompletedLessons(Array.isArray(data.completed_lessons) ? data.completed_lessons : []);
-        }
-      } catch (e) {
-        console.error("Error fetching completed lessons:", e);
-      }
-    };
-    
-    if (course?.id) {
-      fetchCompletedLessons();
-    }
-  }, [course?.id]);
+  // Process the data
+  for (const item of data) {
+    result += item.value * item.weight;
+  }
   
-  const handlePrevious = () => {
-    setCurrentLessonIndex(Math.max(0, currentLessonIndex - 1));
-  };
-  
-  const handleNext = () => {
-    const nextIndex = Math.min(lessons.length - 1, currentLessonIndex + 1);
-    setCurrentLessonIndex(nextIndex);
-  };
-  
-  const handleComplete = async () => {
-    // Only allow completing lessons up to the maxAccessibleLesson
-    if ((currentLessonIndex + 1) <= maxAccessibleLesson) {
-      // Check if this lesson is already completed
-      if (!completedLessons.includes(currentLessonIndex)) {
-        // Add the lesson to completed lessons
-        const updatedCompletedLessons = [...completedLessons, currentLessonIndex];
-        setCompletedLessons(updatedCompletedLessons);
-        
-        // Call the parent component's onLessonComplete function
-        onLessonComplete(currentLessonIndex);
-        
-        // Calculate the new progress percentage
-        // Each lesson contributes equally to 70% of the course
-        // The assessment contributes the remaining 30%
-        const lessonProgress = (updatedCompletedLessons.length / lessons.length) * 70;
-        
-        // Update the progress in the database
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
-          
-          const { error } = await supabase
-            .from('course_progress')
-            .update({ 
-              completed_lessons: updatedCompletedLessons,
-              progress_percentage: Math.round(lessonProgress),
-              last_accessed: new Date().toISOString(),
-            })
-            .eq('user_id', user.id)
-            .eq('course_id', course?.id);
-          
-          if (error) {
-            console.error("Error updating course progress:", error);
-            toast.error("Failed to update progress");
-          } else {
-            toast.success("Lesson completed!");
-            
-            // Move to next lesson if available
-            if (currentLessonIndex < lessons.length - 1) {
-              handleNext();
-            }
-          }
-        } catch (e) {
-          console.error("Error in handleComplete:", e);
-          toast.error("An error occurred");
-        }
-      } else {
-        toast.info("You've already completed this lesson");
-      }
-    } else {
-      toast.error("You need to progress further in the course to complete this lesson");
-    }
-  };
-  
-  // Get the stepper value (current step)
-  const currentStep = currentLessonIndex + 1;
-  
-  // Check if current lesson is completable
-  const isCompletable = (currentLessonIndex + 1) <= maxAccessibleLesson;
-  
-  // Check if current lesson is already completed
-  const isLessonCompleted = (index: number) => Array.isArray(completedLessons) && completedLessons.includes(index);
-  
-  return (
-    <div className="space-y-6">
-      <Card className="border-none shadow-none">
-        <CardHeader>
-          <CardTitle className="text-2xl">Course Materials</CardTitle>
-          <CardDescription>
-            Access your learning materials and track your progress through the course.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Lesson Navigator with Stepper */}
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Progress</CardTitle>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden mt-2">
-                <div 
-                  className="bg-primary h-2 rounded-full transition-all" 
-                  style={{ width: `${userProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-right mt-1">{userProgress}% Complete</p>
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto">
-              <Stepper value={currentStep} orientation="vertical">
-                {lessons.map((lesson, index) => {
-                  const isAccessible = index <= maxAccessibleLesson;
-                  const isActive = index === currentLessonIndex;
-                  const isCompleted = isLessonCompleted(index);
-                  
-                  return (
-                    <StepperItem 
-                      key={index} 
-                      step={index + 1} 
-                      completed={isCompleted}
-                      className="relative items-start not-last:pb-4"
-                    >
-                      <StepperTrigger 
-                        className={`items-start rounded pb-12 last:pb-0 w-full text-left ${
-                          !isAccessible ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                        }`}
-                        onClick={() => isAccessible && setCurrentLessonIndex(index)}
-                        disabled={!isAccessible}
-                      >
-                        <StepperIndicator>
-                          {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
-                        </StepperIndicator>
-                        <div className="ml-3 mt-0.5">
-                          <StepperTitle>{lesson.title}</StepperTitle>
-                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <Clock className="mr-1 h-3 w-3" /> 
-                            {lesson.duration}
-                          </div>
-                        </div>
-                      </StepperTrigger>
-                      {index < lessons.length - 1 && (
-                        <StepperSeparator className="absolute left-3 top-[calc(1.5rem+0.125rem)] -translate-x-1/2 h-[calc(100%-1.5rem-0.25rem)]" />
-                      )}
-                    </StepperItem>
-                  );
-                })}
-              </Stepper>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Lesson Content */}
-        <div className="md:col-span-2">
-          <Card className="min-h-[500px] flex flex-col">
-            <CardHeader>
-              <CardTitle>
-                Lesson {currentLessonIndex + 1}: {lessons[currentLessonIndex].title}
-              </CardTitle>
-              <CardDescription className="flex items-center">
-                <Clock className="mr-1 h-4 w-4" /> 
-                {lessons[currentLessonIndex].duration}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <div className="prose dark:prose-invert max-w-none">
-                <h3>Overview</h3>
-                <p>
-                  This lesson covers the key concepts and practical knowledge related to {lessons[currentLessonIndex].title.toLowerCase()}.
-                  You'll learn about the fundamental principles and how to apply them in real-world scenarios.
-                </p>
-                
-                <h3>Learning Objectives</h3>
-                <ul>
-                  <li>Understand the core concepts related to this topic</li>
-                  <li>Learn how to apply these principles in practical situations</li>
-                  <li>Gain hands-on experience through interactive examples</li>
-                  <li>Develop problem-solving skills specific to this area</li>
-                </ul>
-                
-                <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md my-4">
-                  <h4 className="flex items-center text-lg font-medium mb-2">
-                    <Play className="mr-2 h-4 w-4" /> Video Lecture
-                  </h4>
-                  <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">Video content for "{lessons[currentLessonIndex].title}"</p>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    This video lecture provides a comprehensive overview of the lesson material.
-                  </p>
-                </div>
-                
-                <h3>Key Takeaways</h3>
-                <p>
-                  After completing this lesson, you should be able to:
-                </p>
-                <ul>
-                  <li>Explain the main concepts covered in the lesson</li>
-                  <li>Apply the techniques in different scenarios</li>
-                  <li>Analyze problems using the frameworks introduced</li>
-                  <li>Evaluate solutions based on the lesson principles</li>
-                </ul>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between mt-auto pt-4 border-t">
-              <Button 
-                variant="outline" 
-                onClick={handlePrevious}
-                disabled={currentLessonIndex === 0}
-              >
-                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-              </Button>
-              <div className="flex space-x-2">
-                {isCompletable && !isLessonCompleted(currentLessonIndex) && (
-                  <Button 
-                    onClick={handleComplete}
-                    variant="default"
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" /> Mark as Complete
-                  </Button>
-                )}
-                {isLessonCompleted(currentLessonIndex) && (
-                  <Button variant="outline" disabled>
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Completed
-                  </Button>
-                )}
-                <Button 
-                  onClick={handleNext}
-                  disabled={currentLessonIndex === lessons.length - 1}
-                  variant={isCompletable && !isLessonCompleted(currentLessonIndex) ? "outline" : "default"}
-                >
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
+  return result;
+}`}
+        </code>
+      </pre>
+      <p>Try running this code with different inputs to see how it behaves.</p>
+    </div>
+  },
+  {
+    title: 'Practice Exercise',
+    type: 'exercise',
+    icon: <PenTool className="h-5 w-5 text-orange-500" />,
+    content: <div className="prose dark:prose-invert max-w-none">
+      <h3>Interactive Exercise</h3>
+      <p>Now it's time to apply what you've learned with a hands-on exercise.</p>
+      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-4">
+        <h4 className="font-medium text-lg">Your Task:</h4>
+        <p>Modify the code example from the previous section to handle negative values differently. Specifically:</p>
+        <ul>
+          <li>If an item has a negative value, it should be treated as zero.</li>
+          <li>Keep track of how many negative values were encountered.</li>
+          <li>Return both the result and the count of negative values.</li>
+        </ul>
+        <div className="mt-4">
+          <p className="font-medium">Submit your solution:</p>
+          <textarea 
+            className="w-full h-32 p-2 border rounded-md bg-white dark:bg-gray-700 mt-2 font-mono text-sm"
+            placeholder="Write your solution here..."
+          ></textarea>
         </div>
       </div>
     </div>
+  },
+  {
+    title: 'Conclusion',
+    type: 'text',
+    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+    content: <div className="prose dark:prose-invert max-w-none">
+      <h3>Summary of What We've Learned</h3>
+      <p>Congratulations on completing this module! Let's summarize what we've covered:</p>
+      <ul>
+        <li>The fundamental concepts and their importance</li>
+        <li>Practical implementation details through code examples</li>
+        <li>Hands-on experience through interactive exercises</li>
+      </ul>
+      <p>In the next module, we'll build on these foundations to explore more advanced topics. Make sure you feel comfortable with the material here before moving on.</p>
+      <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg my-4 border-l-4 border-green-500">
+        <p className="font-medium text-green-700 dark:text-green-400">You've completed this section! Mark it as complete to track your progress.</p>
+      </div>
+    </div>
+  }
+];
+
+interface CourseMaterialProps {
+  courseId: string;
+  courseName: string;
+  initialProgress?: number;
+  onProgressUpdate?: (progress: number) => void;
+}
+
+const CourseMaterial: React.FC<CourseMaterialProps> = ({ 
+  courseId, 
+  courseName,
+  initialProgress = 0,
+  onProgressUpdate
+}) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
+  const totalSteps = courseMaterials.length;
+  
+  useEffect(() => {
+    fetchCompletedLessons();
+  }, [courseId]);
+  
+  const fetchCompletedLessons = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('course_progress')
+        .select('completed_lessons')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching completed lessons:', error);
+        return;
+      }
+      
+      if (data?.completed_lessons) {
+        setCompletedLessons(data.completed_lessons);
+        
+        // If user has completed lessons, show the next uncompleted one
+        if (data.completed_lessons.length > 0) {
+          // Find the first lesson that has not been completed
+          for (let i = 0; i < totalSteps; i++) {
+            if (!data.completed_lessons.includes(i)) {
+              setCurrentStep(i + 1); // +1 because steps are 1-indexed
+              break;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching lesson progress:', error);
+    }
+  };
+  
+  const markLessonComplete = async (lessonIndex: number) => {
+    try {
+      if (completedLessons.includes(lessonIndex)) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to track progress');
+        return;
+      }
+      
+      // Add the current lesson to completed lessons
+      const updatedCompletedLessons = [...new Set([...completedLessons, lessonIndex])];
+      setCompletedLessons(updatedCompletedLessons);
+      
+      // Calculate progress percentage
+      const progressPercentage = Math.round((updatedCompletedLessons.length / totalSteps) * 100);
+      
+      // Update progress in the database
+      await updateCourseProgress(courseId, progressPercentage);
+      
+      // Notify parent component
+      if (onProgressUpdate) {
+        onProgressUpdate(progressPercentage);
+      }
+      
+      toast.success('Progress saved successfully!');
+    } catch (error) {
+      console.error('Error updating lesson progress:', error);
+      toast.error('Failed to save progress');
+    }
+  };
+  
+  const handleNext = () => {
+    if (currentStep < totalSteps) {
+      markLessonComplete(currentStep - 1);
+      setCurrentStep(currentStep + 1);
+    }
+  };
+  
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+  
+  const handleStepClick = (step: number) => {
+    setCurrentStep(step);
+  };
+  
+  const renderIcon = (index: number) => {
+    if (completedLessons.includes(index)) {
+      return <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-500" />;
+    }
+    return index + 1;
+  };
+
+  return (
+    <Card className="border border-gray-200 dark:border-gray-700 shadow-lg bg-white dark:bg-gray-900 transition-all duration-300">
+      <CardHeader className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">
+        <CardTitle className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
+          {courseName}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 md:grid-cols-4">
+          <div className="border-r border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+            <h3 className="font-semibold text-lg mb-4 text-gray-800 dark:text-white">Course Content</h3>
+            <Stepper
+              orientation="vertical"
+              value={currentStep}
+              onChange={handleStepClick}
+              className="space-y-4"
+            >
+              {courseMaterials.map((material, index) => (
+                <StepperItem 
+                  key={index} 
+                  step={index + 1}
+                  completed={completedLessons.includes(index)}
+                  className="cursor-pointer"
+                >
+                  <StepperTrigger className="w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md px-3 py-2.5 transition-colors duration-200">
+                    <StepperIcon step={index + 1} />
+                    <div className="ml-2">
+                      <StepperTitle className="flex items-center gap-2">
+                        {material.icon}
+                        <span>{material.title}</span>
+                      </StepperTitle>
+                    </div>
+                  </StepperTrigger>
+                  <StepperSeparator />
+                </StepperItem>
+              ))}
+            </Stepper>
+          </div>
+          
+          <div className="p-6 md:col-span-3">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                {courseMaterials[currentStep - 1].icon}
+                {courseMaterials[currentStep - 1].title}
+              </h3>
+              <div className="prose dark:prose-invert max-w-none">
+                {courseMaterials[currentStep - 1].content}
+              </div>
+            </div>
+            
+            <div className="flex justify-between mt-8">
+              <Button
+                onClick={handlePrevious}
+                disabled={currentStep === 1}
+                variant="outline"
+                className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              
+              {currentStep < totalSteps ? (
+                <Button
+                  onClick={handleNext}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => markLessonComplete(currentStep - 1)}
+                  disabled={completedLessons.includes(currentStep - 1)}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  {completedLessons.includes(currentStep - 1) ? 
+                    'Completed' : 
+                    'Mark as Complete'}
+                  <CheckCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
