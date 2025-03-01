@@ -224,7 +224,7 @@ export const joinEvent = async (eventId: string) => {
   if (error) throw error;
 };
 
-export const updateCourseProgress = async (courseId: string, progress: number) => {
+export const updateCourseProgress = async (courseId: string, progress: number, currentLessonIndex?: number) => {
   try {
     console.log("Starting updateCourseProgress for course:", courseId);
     const { data: { user } } = await supabase.auth.getUser();
@@ -253,7 +253,8 @@ export const updateCourseProgress = async (courseId: string, progress: number) =
       course_id: courseId,
       progress_percentage: progress,
       completed: progress === 100,
-      last_accessed: new Date().toISOString()
+      last_accessed: new Date().toISOString(),
+      current_lesson_index: currentLessonIndex !== undefined ? currentLessonIndex : existingProgress?.current_lesson_index
     };
     
     console.log("Upserting progress data:", progressData);

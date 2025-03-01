@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Phone, MapPin, Briefcase, Book, Save, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Briefcase, Book, Save, X, LogOut } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from 'react-router-dom';
 
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -26,6 +26,7 @@ const Profile: React.FC = () => {
   });
   const [courseProgresses, setCourseProgresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserProfile();
@@ -39,11 +40,15 @@ const Profile: React.FC = () => {
       
       if (user) {
         // Fetch profile data
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+        }
         
         setUserProfile({
           id: user.id,
@@ -120,6 +125,17 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out');
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
     fetchUserProfile(); // Reset form to original values
@@ -131,7 +147,18 @@ const Profile: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6">
-      <h2 className="text-3xl font-bold mb-4">User Profile</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-3xl font-bold">User Profile</h2>
+        <Button 
+          onClick={handleLogout}
+          variant="destructive"
+          className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800"
+        >
+          <LogOut className="h-4 w-4" />
+          Log Out
+        </Button>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="neumorphic-card shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">

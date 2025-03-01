@@ -99,6 +99,10 @@ const CourseDetail = () => {
       setUserProgress(progress.progress_percentage);
       setIsEnrolled(true);
       setHasCompletedCourse(progress.completed);
+      // If progress has a currentLessonIndex, update it
+      if (progress.current_lesson_index !== undefined) {
+        setCurrentLessonIndex(progress.current_lesson_index);
+      }
     }
 
     if (certificate) {
@@ -131,7 +135,7 @@ const CourseDetail = () => {
       const totalLessons = course.lessons_count;
       const newProgress = Math.min(Math.round(((lessonIndex + 1) / totalLessons) * 100), 100);
       
-      await updateCourseProgress(courseId, newProgress);
+      await updateCourseProgress(courseId, newProgress, lessonIndex);
       setUserProgress(newProgress);
       
       if (newProgress === 100) {
@@ -284,7 +288,7 @@ const CourseDetail = () => {
           
           <TabsContent value="materials">
             <CourseMaterial 
-              course={course} 
+              courseId={courseId || ''}
               lessons={lessons}
               currentLessonIndex={currentLessonIndex}
               setCurrentLessonIndex={setCurrentLessonIndex}
