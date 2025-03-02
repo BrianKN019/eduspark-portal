@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,9 +54,8 @@ const NeumorphicTodoList: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Explicitly type the response data
         const { data, error } = await supabase
-          .from('tasks')
+          .from('tasks' as any)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -69,8 +67,7 @@ const NeumorphicTodoList: React.FC = () => {
         }
         
         if (data) {
-          // Use type assertion to help TypeScript understand the data
-          const tasksData = data as TaskData[];
+          const tasksData = data as unknown as TaskData[];
           const formattedTodos = tasksData.map(todo => ({
             id: todo.id,
             text: todo.text,
@@ -113,7 +110,7 @@ const NeumorphicTodoList: React.FC = () => {
       };
       
       const { data, error } = await supabase
-        .from('tasks')
+        .from('tasks' as any)
         .insert([todoData])
         .select();
         
@@ -124,7 +121,7 @@ const NeumorphicTodoList: React.FC = () => {
       }
       
       toast.success('Task added successfully');
-      return data[0] as TaskData;
+      return data[0] as unknown as TaskData;
     } catch (error) {
       console.error('Error saving task:', error);
       toast.error('Failed to save task');
@@ -151,7 +148,7 @@ const NeumorphicTodoList: React.FC = () => {
       if (updates.favorite !== undefined) todoData.favorite = updates.favorite;
       
       const { error } = await supabase
-        .from('tasks')
+        .from('tasks' as any)
         .update(todoData)
         .eq('id', id)
         .eq('user_id', user.id);
@@ -180,7 +177,7 @@ const NeumorphicTodoList: React.FC = () => {
       }
       
       const { error } = await supabase
-        .from('tasks')
+        .from('tasks' as any)
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
@@ -229,7 +226,7 @@ const NeumorphicTodoList: React.FC = () => {
     }
   };
 
-  const toggleTodo = async (id: number | string) => {
+  const toggleTodo = async (id: string) => {
     const todoToToggle = todos.find(todo => todo.id === id);
     if (!todoToToggle) return;
     
@@ -245,7 +242,7 @@ const NeumorphicTodoList: React.FC = () => {
     }
   };
 
-  const toggleFavorite = async (id: number | string) => {
+  const toggleFavorite = async (id: string) => {
     const todoToToggle = todos.find(todo => todo.id === id);
     if (!todoToToggle) return;
     
@@ -259,7 +256,7 @@ const NeumorphicTodoList: React.FC = () => {
     }
   };
 
-  const removeTodo = async (id: number | string) => {
+  const removeTodo = async (id: string) => {
     const confirmed = window.confirm('Are you sure you want to delete this task?');
     if (!confirmed) return;
     

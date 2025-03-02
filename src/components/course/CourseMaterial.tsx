@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Stepper, StepperItem, StepperSeparator, StepperTrigger, StepperIcon, StepperTitle, StepperContent } from "@/components/ui/stepper";
+import { Progress } from "@/components/ui/progress";
 import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
 import { updateCourseProgress } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,7 +124,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   currentLessonIndex,
   setCurrentLessonIndex,
   onLessonComplete,
-  userProgress,
+  userProgress = 0,
   courseName = "Course Material",
   initialProgress = 0,
   onProgressUpdate
@@ -242,32 +242,107 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4">
           <div className="border-r border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
             <h3 className="font-semibold text-lg mb-4 text-gray-800 dark:text-white">Course Content</h3>
-            <Stepper
-              orientation="vertical"
-              value={safeCurrentIndex}
-              onChange={handleStepClick}
-              className="space-y-4"
-            >
-              {courseMaterials.map((material, index) => (
-                <StepperItem 
-                  key={index} 
-                  step={index + 1}
-                  completed={completedLessons.includes(index)}
-                  className="cursor-pointer"
-                >
-                  <StepperTrigger className="w-full text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md px-3 py-2.5 transition-colors duration-200">
-                    <StepperIcon step={index + 1} />
-                    <div className="ml-2">
-                      <StepperTitle className="flex items-center gap-2">
-                        {material.icon}
-                        <span>{material.title}</span>
-                      </StepperTitle>
+            
+            {/* Ultra Premium Stepper Component */}
+            <div className="space-y-4">
+              {courseMaterials.map((material, index) => {
+                const stepNumber = index + 1;
+                const isActive = stepNumber === safeCurrentIndex;
+                const isCompleted = completedLessons.includes(index);
+                
+                return (
+                  <div key={index} className="relative">
+                    {/* Progress connector */}
+                    {index > 0 && (
+                      <div className="absolute top-0 left-5 -translate-x-1/2 h-full w-0.5 -mt-3">
+                        <div 
+                          className={`h-full transition-all duration-300 ${
+                            completedLessons.includes(index-1) && (isCompleted || isActive) 
+                              ? 'bg-gradient-to-b from-blue-500 to-purple-600' 
+                              : 'bg-gray-200 dark:bg-gray-700'
+                          }`}
+                        ></div>
+                      </div>
+                    )}
+                    
+                    {/* Step item */}
+                    <div 
+                      className={`relative flex items-start cursor-pointer group transition-all duration-300 rounded-lg
+                        ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 p-3' : 'p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
+                      onClick={() => handleStepClick(stepNumber)}
+                    >
+                      {/* Step circle */}
+                      <div className="flex-shrink-0 relative z-10">
+                        <div 
+                          className={`flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300 ${
+                            isCompleted 
+                              ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-md shadow-blue-500/20' 
+                              : isActive 
+                                ? 'bg-white dark:bg-gray-800 border-2 border-blue-500 shadow-md' 
+                                : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600'
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle className="h-5 w-5 text-white" />
+                          ) : (
+                            <span className={`font-bold text-sm ${isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {stepNumber}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="ml-4 flex-1">
+                        <div className="flex items-center">
+                          {material.icon}
+                          <h4 className={`ml-2 font-medium ${
+                            isActive 
+                              ? 'text-blue-700 dark:text-blue-300' 
+                              : isCompleted 
+                                ? 'text-gray-700 dark:text-gray-300' 
+                                : 'text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {material.title}
+                          </h4>
+                        </div>
+                        
+                        {isActive && (
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {material.type === 'video' && 'Watch the introduction video'}
+                            {material.type === 'text' && 'Read through the learning materials'}
+                            {material.type === 'code' && 'Explore the code examples'}
+                            {material.type === 'exercise' && 'Complete the practice exercise'}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Status indicator */}
+                      {isCompleted && !isActive && (
+                        <div className="ml-2 flex-shrink-0">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        </div>
+                      )}
                     </div>
-                  </StepperTrigger>
-                  <StepperSeparator />
-                </StepperItem>
-              ))}
-            </Stepper>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Progress bar */}
+            <div className="mt-6 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">{userProgress}%</span>
+              </div>
+              <Progress 
+                value={userProgress} 
+                className="h-2 bg-gray-200 dark:bg-gray-700"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {completedLessons.length} of {totalSteps} lessons completed
+              </p>
+            </div>
           </div>
           
           <div className="p-6 md:col-span-3">
@@ -286,7 +361,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 onClick={handlePrevious}
                 disabled={safeCurrentIndex === 1}
                 variant="outline"
-                className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -310,7 +385,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                     }
                   }}
                   disabled={completedLessons.includes(safeCurrentIndex - 1)}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
                 >
                   {completedLessons.includes(safeCurrentIndex - 1) ? 
                     'Completed' : 
