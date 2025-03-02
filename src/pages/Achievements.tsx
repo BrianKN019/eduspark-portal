@@ -78,29 +78,39 @@ const Achievements: React.FC = () => {
               .maybeSingle();
               
             if (courseData) {
-              await supabase.from('user_badges').insert({
-                user_id: user.id,
-                name: `${courseData.title} Completion`,
-                description: `Completed the ${courseData.title} course`,
-                image_url: `https://api.dicebear.com/6.x/shapes/svg?seed=${courseData.title}`,
-                source_type: 'course',
-                source_id: course.course_id,
-                earned_at: new Date().toISOString(),
-                tier: 'gold',
-                category: 'course'
-              });
-              
-              await supabase.from('certificates').insert({
-                user_id: user.id,
-                course_id: course.course_id,
-                name: courseData.title,
-                description: `Successfully completed ${courseData.title} with a score of 100%`,
-                earned_date: new Date().toISOString(),
-                download_url: `/certificates/${course.course_id}.pdf`
-              });
-              
-              toast.success(`You've earned a new badge for completing ${courseData.title}!`);
-              refetchAchievements();
+              // Check if certificate already exists before creating a new one
+              const { data: existingCert } = await supabase
+                .from('certificates')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('course_id', course.course_id)
+                .maybeSingle();
+                
+              if (!existingCert) {
+                await supabase.from('user_badges').insert({
+                  user_id: user.id,
+                  name: `${courseData.title} Completion`,
+                  description: `Completed the ${courseData.title} course`,
+                  image_url: `https://api.dicebear.com/6.x/shapes/svg?seed=${courseData.title}`,
+                  source_type: 'course',
+                  source_id: course.course_id,
+                  earned_at: new Date().toISOString(),
+                  tier: 'gold',
+                  category: 'course'
+                });
+                
+                await supabase.from('certificates').insert({
+                  user_id: user.id,
+                  course_id: course.course_id,
+                  name: courseData.title,
+                  description: `Successfully completed ${courseData.title} with a score of 100%`,
+                  earned_date: new Date().toISOString(),
+                  download_url: `/certificates/${course.course_id}.pdf`
+                });
+                
+                toast.success(`You've earned a new badge for completing ${courseData.title}!`);
+                refetchAchievements();
+              }
             }
           }
         }

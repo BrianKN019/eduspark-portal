@@ -17,13 +17,16 @@ import {
   Menu, 
   X, 
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 const Sidebar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeItem, setActiveItem] = useState('/');
 
   // Close mobile menu when screen size increases
   useEffect(() => {
@@ -40,6 +43,7 @@ const Sidebar: React.FC = () => {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setActiveItem(window.location.pathname);
   }, [window.location.pathname]);
 
   const navItems = [
@@ -52,7 +56,7 @@ const Sidebar: React.FC = () => {
     { to: '/achievements', icon: Award, label: 'Achievements & Badges' },
     { to: '/learning-paths', icon: Map, label: 'Learning Paths' },
     { to: '/community', icon: Users, label: 'Community & Forums' },
-    { to: '/resources', icon: Library, label: 'Resource Library' },
+    { to: '/resource-library', icon: Library, label: 'Resource Library' },
     { to: '/profile', icon: User, label: 'Profile' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
@@ -63,6 +67,17 @@ const Sidebar: React.FC = () => {
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  // Animation variants
+  const sidebarVariants = {
+    expanded: { width: "16rem" },
+    collapsed: { width: "4rem" }
+  };
+
+  const itemVariants = {
+    expanded: { opacity: 1, x: 0 },
+    collapsed: { opacity: 0, x: -10 }
   };
 
   return (
@@ -92,40 +107,87 @@ const Sidebar: React.FC = () => {
       />
       
       {/* Sidebar content - position fixed for mobile, relative for desktop */}
-      <aside className={`bg-card text-card-foreground ${
-        isCollapsed ? 'w-16' : 'w-64'
-      } max-h-screen overflow-y-auto py-7 px-2 ${
-        isMobileMenuOpen ? 'fixed' : 'hidden md:block'
-      } md:relative inset-y-0 left-0 z-40 transition duration-300 ease-in-out neumorphic-sidebar shadow-lg`}>
-        <div className="flex justify-end px-2 mb-4 md:hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleMobileMenu}
-            aria-label="Close menu"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+      <motion.aside 
+        className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 
+        text-card-foreground max-h-screen overflow-y-auto py-7 px-2 ${
+          isMobileMenuOpen ? 'fixed' : 'hidden md:block'
+        } md:relative inset-y-0 left-0 z-40 shadow-lg 
+        rounded-r-2xl border-r border-gray-200 dark:border-gray-800`}
+        variants={sidebarVariants}
+        initial={isCollapsed ? "collapsed" : "expanded"}
+        animate={isCollapsed ? "collapsed" : "expanded"}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <div className="flex justify-between items-center px-3 mb-8">
+          {!isCollapsed && (
+            <motion.div 
+              className="flex items-center gap-2"
+              variants={itemVariants}
+              initial="expanded"
+              animate={isCollapsed ? "collapsed" : "expanded"}
+            >
+              <Sparkles className="h-6 w-6 text-purple-600" />
+              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
+                EduSpark
+              </span>
+            </motion.div>
+          )}
+          <div className="flex md:hidden">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleMobileMenu}
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
         
         <nav>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {navItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-2 px-4'} py-3 rounded transition duration-200 ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground neumorphic-active'
-                        : 'hover:bg-accent hover:text-accent-foreground neumorphic-hover'
-                    }`
-                  }
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={({ isActive }) => {
+                    const isCurrentActive = isActive || activeItem === item.to;
+                    return `
+                      flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3 px-4'} py-3 rounded-lg
+                      transition-all duration-200 overflow-hidden group relative
+                      ${isCurrentActive
+                        ? 'bg-gradient-to-r from-purple-600/20 to-blue-500/20 text-purple-600 dark:text-purple-400 font-medium'
+                        : 'hover:bg-purple-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}
+                    `;
+                  }}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setActiveItem(item.to);
+                  }}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!isCollapsed && <span>{item.label}</span>}
+                  <div className={`
+                    ${activeItem === item.to ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'} 
+                    ${isCollapsed ? 'mx-auto' : ''}
+                  `}>
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                  </div>
+                  
+                  {!isCollapsed && (
+                    <motion.span
+                      variants={itemVariants}
+                      initial="expanded"
+                      animate={isCollapsed ? "collapsed" : "expanded"}
+                      className="whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+
+                  {/* Highlight indicator */}
+                  {activeItem === item.to && (
+                    <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-600 to-blue-500 rounded-r"></div>
+                  )}
                 </NavLink>
               </li>
             ))}
@@ -137,17 +199,17 @@ const Sidebar: React.FC = () => {
             variant="ghost" 
             size="icon" 
             onClick={toggleCollapse}
-            className="rounded-full opacity-80 hover:opacity-100"
+            className="rounded-full hover:bg-purple-100 dark:hover:bg-gray-800"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 text-purple-600" />
             ) : (
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5 text-purple-600" />
             )}
           </Button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 };

@@ -59,27 +59,35 @@ const Certificate: React.FC<CertificateProps> = ({
       const buttonsElement = document.getElementById('certificate-buttons');
       if (buttonsElement) buttonsElement.style.display = 'none';
       
+      // Use higher resolution and better settings for the PDF
       const canvas = await html2canvas(certificateElement, {
-        scale: 2, // Higher resolution
+        scale: 4, // Higher resolution for better quality
         logging: false,
-        backgroundColor: null
+        backgroundColor: null,
+        useCORS: true,
+        allowTaint: true,
+        windowWidth: certificateElement.scrollWidth,
+        windowHeight: certificateElement.scrollHeight
       });
       
       // Show the buttons again
       if (buttonsElement) buttonsElement.style.display = 'flex';
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Calculate dimensions to fit the PDF
+      // Calculate dimensions to fit the PDF properly without cropping
       const imgWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Ensure the image is not cropped by adjusting position if needed
+      const yPosition = Math.max(0, (pdf.internal.pageSize.getHeight() - imgHeight) / 2);
+      
+      pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
       pdf.save(`${courseName.replace(/\s+/g, '_')}_Certificate.pdf`);
       
       // Store certificate in database if it doesn't exist
@@ -123,7 +131,8 @@ const Certificate: React.FC<CertificateProps> = ({
       // For sharing, we need a file or URL, so create a temporary image first
       const canvas = await html2canvas(certificateRef.current, {
         scale: 2,
-        backgroundColor: null
+        backgroundColor: null,
+        useCORS: true
       });
       
       // Convert canvas to blob
