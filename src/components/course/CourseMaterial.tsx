@@ -166,7 +166,10 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
               break;
             }
           }
-          setCurrentLessonIndex(nextUncompleted + 1); // +1 because steps are 1-indexed
+          // Ensure we only set the current lesson index once during initialization
+          setTimeout(() => {
+            setCurrentLessonIndex(nextUncompleted + 1); // +1 because steps are 1-indexed
+          }, 0);
         }
       }
     } catch (error) {
@@ -176,6 +179,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   
   const markLessonComplete = async (lessonIndex: number) => {
     try {
+      // Prevent duplicate marking of completed lessons
       if (completedLessons.includes(lessonIndex)) return;
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -227,17 +231,26 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   
   const handleNext = () => {
     if (currentLessonIndex < totalSteps) {
-      // Mark current lesson as complete
+      // First mark the current lesson as complete
       const currentIndex = currentLessonIndex - 1;
       if (!completedLessons.includes(currentIndex)) {
         if (onLessonComplete) {
-          onLessonComplete(currentIndex);
+          onLessonComplete(currentIndex).then(() => {
+            // Only move to next lesson after completion is confirmed
+            setCurrentLessonIndex(prevIndex => prevIndex + 1);
+          }).catch(error => {
+            console.error('Error completing lesson:', error);
+            toast.error('Failed to complete lesson');
+          });
         } else {
           markLessonComplete(currentIndex);
+          // Move to next lesson after marking complete
+          setCurrentLessonIndex(prevIndex => prevIndex + 1);
         }
+      } else {
+        // If already completed, just move to next
+        setCurrentLessonIndex(prevIndex => prevIndex + 1);
       }
-      // Move to next lesson
-      setCurrentLessonIndex(prevIndex => prevIndex + 1);
     }
   };
   
@@ -276,10 +289,10 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid grid-cols-1 md:grid-cols-4">
-          <div className="border-r border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+          <div className="border-r border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 md:max-h-screen md:overflow-y-auto">
             <h3 className="font-semibold text-lg mb-4 text-gray-800 dark:text-white">Course Content</h3>
             
-            {/* Ultra Premium Stepper Component */}
+            {/* Improved Stepper Component */}
             <div className="space-y-4">
               {courseMaterials.map((material, index) => {
                 const stepNumber = index + 1;
@@ -304,9 +317,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                     
                     {/* Step item */}
                     <div 
-                      className={`relative flex items-start cursor-pointer group transition-all duration-300 rounded-lg
+                      className={`relative flex items-start group transition-all duration-300 rounded-lg
                         ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 p-3' : 'p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30'}
-                        ${!isClickable ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        ${!isClickable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       onClick={() => isClickable && handleStepClick(stepNumber)}
                     >
                       {/* Step circle */}
@@ -408,7 +421,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
             </div>
           </div>
           
-          <div className="p-6 md:col-span-3">
+          <div className="p-6 md:col-span-3 max-h-screen overflow-y-auto">
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                 {currentMaterial.icon}

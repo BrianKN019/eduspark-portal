@@ -37,6 +37,11 @@ const Sidebar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [window.location.pathname]);
+
   const navItems = [
     { to: '/', icon: Home, label: 'Dashboard' },
     { to: '/courses', icon: BookOpen, label: 'Courses' },
@@ -62,8 +67,9 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
+      {/* Mobile menu button - moved to a better position */}
       <Button
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
         onClick={toggleMobileMenu}
         size="icon"
         variant="outline"
@@ -76,6 +82,7 @@ const Sidebar: React.FC = () => {
         )}
       </Button>
 
+      {/* Backdrop overlay that only appears in mobile mode */}
       <div 
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
           isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -84,11 +91,12 @@ const Sidebar: React.FC = () => {
         aria-hidden="true"
       />
       
+      {/* Sidebar content - position fixed for mobile, relative for desktop */}
       <aside className={`bg-card text-card-foreground ${
         isCollapsed ? 'w-16' : 'w-64'
-      } space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 transition duration-300 ease-in-out neumorphic-sidebar z-40 shadow-xl`}>
+      } max-h-screen overflow-y-auto py-7 px-2 ${
+        isMobileMenuOpen ? 'fixed' : 'hidden md:block'
+      } md:relative inset-y-0 left-0 z-40 transition duration-300 ease-in-out neumorphic-sidebar shadow-lg`}>
         <div className="flex justify-end px-2 mb-4 md:hidden">
           <Button 
             variant="ghost" 

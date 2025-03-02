@@ -13,17 +13,24 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const Achievements: React.FC = () => {
-  // Use explicit type parameters for useQuery to avoid type recursion
-  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements>({
+  // Fix type recursion by using explicit type annotations without generics that could cause recursion
+  const achievementsQuery = useQuery({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
+  
+  const userAchievements = achievementsQuery.data as UserAchievements | undefined;
+  const achievementsLoading = achievementsQuery.isLoading;
+  const refetchAchievements = achievementsQuery.refetch;
 
-  // Use explicit type parameter for leaderboard data
-  const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery<LeaderboardEntry[]>({
+  // Fix type recursion for leaderboard data
+  const leaderboardQuery = useQuery({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
   });
+  
+  const leaderboardData = leaderboardQuery.data as LeaderboardEntry[] | undefined;
+  const leaderboardLoading = leaderboardQuery.isLoading;
 
   useEffect(() => {
     const checkForNewBadges = async () => {
@@ -108,21 +115,34 @@ const Achievements: React.FC = () => {
     </div>;
   }
 
-  // Create a new array of Badge objects instead of transforming existing objects to avoid type recursion
-  const typedBadges: Badge[] = (userAchievements?.badges || []).map(badge => {
-    // Create a completely new object with only the properties needed
-    const newBadge: Badge = {
-      id: badge.id,
-      name: badge.name,
-      description: badge.description,
-      imageUrl: badge.imageUrl,
-      tier: (badge.tier as 'bronze' | 'silver' | 'gold') || 'bronze',
-      category: (badge.category as 'course' | 'achievement' | 'streak' | 'milestone') || 'achievement'
-    };
-    return newBadge;
-  });
+  // Manually create badge objects without spreading to avoid type issues
+  const typedBadges: Badge[] = [];
+  if (userAchievements?.badges) {
+    for (const badgeData of userAchievements.badges) {
+      const badge: Badge = {
+        id: badgeData.id,
+        name: badgeData.name,
+        description: badgeData.description,
+        imageUrl: badgeData.imageUrl,
+        tier: 
+          badgeData.tier === 'bronze' || 
+          badgeData.tier === 'silver' || 
+          badgeData.tier === 'gold' 
+            ? badgeData.tier 
+            : 'bronze',
+        category: 
+          badgeData.category === 'course' || 
+          badgeData.category === 'achievement' || 
+          badgeData.category === 'streak' || 
+          badgeData.category === 'milestone' 
+            ? badgeData.category 
+            : 'achievement'
+      };
+      typedBadges.push(badge);
+    }
+  }
 
-  // Create certificates with explicit typing
+  // Create a new certificates array with proper typing
   const typedCertificates: Certificate[] = userAchievements?.certificates || [];
 
   return (

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
@@ -16,13 +17,13 @@ const Layout: React.FC<LayoutProps> = ({ toggleTheme, theme }) => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header toggleTheme={toggleTheme} theme={theme} />
         <motion.main 
-          className="flex-1 overflow-x-hidden overflow-y-auto bg-background"
+          className="flex-1 overflow-x-hidden overflow-y-auto bg-background pt-6 md:pt-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="container mx-auto px-6 py-8">
+          <div className="container mx-auto px-6 py-8 md:py-4">
             <Outlet />
           </div>
         </motion.main>
