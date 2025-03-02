@@ -143,7 +143,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       
       const { data, error } = await supabase
         .from('course_progress')
-        .select('completed_lessons')
+        .select('completed_lessons, assessment_score')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .single();
@@ -157,14 +157,16 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
         setCompletedLessons(data.completed_lessons);
         
         // If user has completed lessons, show the next uncompleted one
-        if (data.completed_lessons.length > 0) {
+        if (data.completed_lessons.length > 0 && currentLessonIndex === 0) {
           // Find the first lesson that has not been completed
+          let nextUncompleted = 0;
           for (let i = 0; i < totalSteps; i++) {
             if (!data.completed_lessons.includes(i)) {
-              setCurrentLessonIndex(Math.min(i + 1, totalSteps)); // +1 because steps are 1-indexed, and ensure it doesn't exceed total steps
+              nextUncompleted = i;
               break;
             }
           }
+          setCurrentLessonIndex(nextUncompleted + 1); // +1 because steps are 1-indexed
         }
       }
     } catch (error) {
@@ -186,15 +188,34 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       const updatedCompletedLessons = [...new Set([...completedLessons, lessonIndex])];
       setCompletedLessons(updatedCompletedLessons);
       
-      // Calculate progress percentage
-      const progressPercentage = Math.round((updatedCompletedLessons.length / totalSteps) * 100);
+      // Get the user's assessment score for this course
+      const { data: progressData } = await supabase
+        .from('course_progress')
+        .select('assessment_score')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .single();
+      
+      const assessmentScore = progressData?.assessment_score || 0;
+      
+      // Calculate material progress (30% of total)
+      const materialProgressPercentage = Math.round((updatedCompletedLessons.length / totalSteps) * 100);
+      const materialContribution = (materialProgressPercentage / 100) * 30;
+      
+      // Calculate assessment contribution (70% of total if score is >= 70%, otherwise proportional)
+      const assessmentContribution = assessmentScore >= 70 
+        ? 70 // Full contribution if passed with 70% or higher
+        : (assessmentScore / 100) * 70; // Proportional contribution
+      
+      // Calculate total progress
+      const totalProgress = Math.round(materialContribution + assessmentContribution);
       
       // Update progress in the database
-      await updateCourseProgress(courseId, progressPercentage);
+      await updateCourseProgress(courseId, totalProgress, lessonIndex);
       
       // Notify parent component
       if (onProgressUpdate) {
-        onProgressUpdate(progressPercentage);
+        onProgressUpdate(totalProgress);
       }
       
       toast.success('Progress saved successfully!');
@@ -206,23 +227,33 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   
   const handleNext = () => {
     if (currentLessonIndex < totalSteps) {
-      if (onLessonComplete) {
-        onLessonComplete(currentLessonIndex - 1);
-      } else {
-        markLessonComplete(currentLessonIndex - 1);
+      // Mark current lesson as complete
+      const currentIndex = currentLessonIndex - 1;
+      if (!completedLessons.includes(currentIndex)) {
+        if (onLessonComplete) {
+          onLessonComplete(currentIndex);
+        } else {
+          markLessonComplete(currentIndex);
+        }
       }
-      setCurrentLessonIndex(currentLessonIndex + 1);
+      // Move to next lesson
+      setCurrentLessonIndex(prevIndex => prevIndex + 1);
     }
   };
   
   const handlePrevious = () => {
     if (currentLessonIndex > 1) {
-      setCurrentLessonIndex(currentLessonIndex - 1);
+      setCurrentLessonIndex(prevIndex => prevIndex - 1);
     }
   };
   
   const handleStepClick = (step: number) => {
-    setCurrentLessonIndex(step);
+    // Only allow clicking on completed steps or the next available step
+    if (step <= completedLessons.length + 1 || completedLessons.includes(step - 1)) {
+      setCurrentLessonIndex(step);
+    } else {
+      toast.info('Complete previous lessons first');
+    }
   };
   
   // Add a safeguard to ensure currentLessonIndex is valid
@@ -230,6 +261,11 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   
   // Safely access the current material
   const currentMaterial = courseMaterials[safeCurrentIndex - 1] || courseMaterials[0];
+
+  // Calculate material progress percentage (just for the stepper display)
+  const materialProgressPercentage = completedLessons.length > 0
+    ? Math.round((completedLessons.length / totalSteps) * 100)
+    : 0;
 
   return (
     <Card className="border border-gray-200 dark:border-gray-700 shadow-lg bg-white dark:bg-gray-900 transition-all duration-300">
@@ -249,6 +285,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 const stepNumber = index + 1;
                 const isActive = stepNumber === safeCurrentIndex;
                 const isCompleted = completedLessons.includes(index);
+                const isClickable = isCompleted || stepNumber <= completedLessons.length + 1;
                 
                 return (
                   <div key={index} className="relative">
@@ -256,7 +293,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                     {index > 0 && (
                       <div className="absolute top-0 left-5 -translate-x-1/2 h-full w-0.5 -mt-3">
                         <div 
-                          className={`h-full transition-all duration-300 ${
+                          className={`h-full transition-all duration-500 ${
                             completedLessons.includes(index-1) && (isCompleted || isActive) 
                               ? 'bg-gradient-to-b from-blue-500 to-purple-600' 
                               : 'bg-gray-200 dark:bg-gray-700'
@@ -268,24 +305,27 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                     {/* Step item */}
                     <div 
                       className={`relative flex items-start cursor-pointer group transition-all duration-300 rounded-lg
-                        ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 p-3' : 'p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
-                      onClick={() => handleStepClick(stepNumber)}
+                        ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 p-3' : 'p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30'}
+                        ${!isClickable ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      onClick={() => isClickable && handleStepClick(stepNumber)}
                     >
                       {/* Step circle */}
                       <div className="flex-shrink-0 relative z-10">
                         <div 
-                          className={`flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300 ${
+                          className={`flex items-center justify-center h-10 w-10 rounded-full transition-all duration-500 ${
                             isCompleted 
                               ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-md shadow-blue-500/20' 
                               : isActive 
                                 ? 'bg-white dark:bg-gray-800 border-2 border-blue-500 shadow-md' 
-                                : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600'
+                                : isClickable
+                                  ? 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 group-hover:border-blue-300'
+                                  : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600'
                           }`}
                         >
                           {isCompleted ? (
-                            <CheckCircle className="h-5 w-5 text-white" />
+                            <CheckCircle className="h-5 w-5 text-white animate-check" />
                           ) : (
-                            <span className={`font-bold text-sm ${isActive ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <span className={`font-bold text-sm ${isActive ? 'text-blue-500' : isClickable ? 'text-gray-500 dark:text-gray-400 group-hover:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
                               {stepNumber}
                             </span>
                           )}
@@ -301,7 +341,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                               ? 'text-blue-700 dark:text-blue-300' 
                               : isCompleted 
                                 ? 'text-gray-700 dark:text-gray-300' 
-                                : 'text-gray-600 dark:text-gray-400'
+                                : isClickable
+                                  ? 'text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                                  : 'text-gray-500 dark:text-gray-500'
                           }`}>
                             {material.title}
                           </h4>
@@ -332,16 +374,37 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
             {/* Progress bar */}
             <div className="mt-6 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                <span className="font-medium text-blue-600 dark:text-blue-400">{userProgress}%</span>
+                <span className="text-gray-600 dark:text-gray-400">Material Progress</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">{materialProgressPercentage}%</span>
               </div>
               <Progress 
-                value={userProgress} 
+                value={materialProgressPercentage} 
                 className="h-2 bg-gray-200 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {completedLessons.length} of {totalSteps} lessons completed
               </p>
+              
+              <div className="flex justify-between text-sm mt-4">
+                <span className="text-gray-600 dark:text-gray-400">Overall Course Progress</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">{userProgress}%</span>
+              </div>
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <div className="flex items-center">
+                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300">
+                      30% Materials
+                    </span>
+                    <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-600 bg-purple-100 ml-3 dark:bg-purple-900 dark:text-purple-300">
+                      70% Assessment
+                    </span>
+                  </div>
+                </div>
+                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
+                  <div style={{ width: `${Math.min((materialProgressPercentage / 100) * 30, 30)}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-500"></div>
+                  <div style={{ width: `${Math.min(userProgress - ((materialProgressPercentage / 100) * 30), 70)}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500 transition-all duration-500"></div>
+                </div>
+              </div>
             </div>
           </div>
           
