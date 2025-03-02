@@ -5,13 +5,13 @@ import { TrendingUp, Users, BookOpen, Clock } from 'lucide-react';
 
 const Analytics: React.FC = () => {
   const platformGrowthData = [
-    { name: 'Apr', users: 4000, courses: 2400, amt: 2400 },
-    { name: 'May', users: 3000, courses: 1398, amt: 2210 },
-    { name: 'Jun', users: 2000, courses: 9800, amt: 2290 },
-    { name: 'Jul', users: 2780, courses: 3908, amt: 2000 },
-    { name: 'Aug', users: 1890, courses: 4800, amt: 2181 },
-    { name: 'Sep', users: 2390, courses: 3800, amt: 2500 },
-    { name: 'Oct', users: 3490, courses: 4300, amt: 2100 },
+    { name: 'Sep', users: 4000, courses: 2400, amt: 2400 },
+    { name: 'Oct', users: 3000, courses: 1398, amt: 2210 },
+    { name: 'Nov', users: 2000, courses: 9800, amt: 2290 },
+    { name: 'Dec', users: 2780, courses: 3908, amt: 2000 },
+    { name: 'Jan', users: 1890, courses: 4800, amt: 2181 },
+    { name: 'Feb', users: 2390, courses: 3800, amt: 2500 },
+    { name: 'Mar', users: 3490, courses: 4300, amt: 2100 },
   ];
 
   const courseCompletionData = [
