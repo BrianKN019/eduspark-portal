@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,23 +19,16 @@ interface MilestoneCardProps {
 }
 
 const Achievements: React.FC = () => {
-  // Use explicit type annotations for query results to prevent deep type instantiation
-  const achievementsQuery = useQuery<UserAchievements, Error>({
+  // Define explicit type parameters for useQuery to prevent deep type instantiation
+  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements>({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
   
-  const userAchievements = achievementsQuery.data;
-  const achievementsLoading = achievementsQuery.isLoading;
-  const refetchAchievements = achievementsQuery.refetch;
-
-  const leaderboardQuery = useQuery<LeaderboardEntry[], Error>({
+  const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
   });
-  
-  const leaderboardData = leaderboardQuery.data;
-  const leaderboardLoading = leaderboardQuery.isLoading;
 
   // Helper functions for type casting
   const getTier = (tier: string): Badge['tier'] => 
@@ -134,7 +126,8 @@ const Achievements: React.FC = () => {
   const typedBadges: Badge[] = [];
   
   if (userAchievements?.badges) {
-    userAchievements.badges.forEach(badgeData => {
+    for (let i = 0; i < userAchievements.badges.length; i++) {
+      const badgeData = userAchievements.badges[i];
       typedBadges.push({
         id: badgeData.id,
         name: badgeData.name,
@@ -143,7 +136,7 @@ const Achievements: React.FC = () => {
         tier: getTier(badgeData.tier),
         category: getCategory(badgeData.category)
       });
-    });
+    }
   }
 
   const typedCertificates: Certificate[] = userAchievements?.certificates || [];
