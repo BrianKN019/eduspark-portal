@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,12 +7,12 @@ import Leaderboard from '@/components/achievements/Leaderboard';
 import CertificateList from '@/components/achievements/CertificateList';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserAchievements, fetchLeaderboard } from '@/lib/api';
-import { Badge } from '@/types/achievements';
+import { Badge, UserAchievements } from '@/types/achievements';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const Achievements: React.FC = () => {
-  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery({
+  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements, Error>({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
@@ -24,13 +23,11 @@ const Achievements: React.FC = () => {
   });
 
   useEffect(() => {
-    // Check if we need to fetch badges from completed courses
     const checkForNewBadges = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Get completed courses
         const { data: completedCourses } = await supabase
           .from('course_progress')
           .select('course_id, progress_percentage')
@@ -39,7 +36,6 @@ const Achievements: React.FC = () => {
           
         if (!completedCourses || completedCourses.length === 0) return;
         
-        // Check if user already has badges for these courses
         for (const course of completedCourses) {
           const { data: existingBadge } = await supabase
             .from('user_badges')
@@ -50,7 +46,6 @@ const Achievements: React.FC = () => {
             .single();
             
           if (!existingBadge) {
-            // Create a new badge for this completed course
             const { data: courseData } = await supabase
               .from('courses')
               .select('title, field, level')
@@ -58,7 +53,6 @@ const Achievements: React.FC = () => {
               .single();
               
             if (courseData) {
-              // Insert badge
               await supabase.from('user_badges').insert({
                 user_id: user.id,
                 name: `${courseData.title} Completion`,
@@ -71,14 +65,13 @@ const Achievements: React.FC = () => {
                 category: 'course'
               });
               
-              // Add certificate - Fixed the property names to match the schema
               await supabase.from('certificates').insert({
                 user_id: user.id,
                 course_id: course.course_id,
-                name: courseData.title, // Changed from title to name
+                name: courseData.title,
                 description: `Successfully completed ${courseData.title} with a score of 100%`,
                 earned_date: new Date().toISOString(),
-                download_url: `/certificates/${course.course_id}.pdf` // Changed from certificate_url to download_url
+                download_url: `/certificates/${course.course_id}.pdf`
               });
               
               toast.success(`You've earned a new badge for completing ${courseData.title}!`);
@@ -112,9 +105,11 @@ const Achievements: React.FC = () => {
     </div>;
   }
 
-  // Type assertion to avoid infinite recursion in type instantiation
   const typedBadges: Badge[] = (userAchievements?.badges || []).map(badge => ({
-    ...badge,
+    id: badge.id,
+    name: badge.name,
+    description: badge.description,
+    imageUrl: badge.imageUrl,
     tier: badge.tier as 'bronze' | 'silver' | 'gold',
     category: badge.category as 'course' | 'achievement' | 'streak' | 'milestone'
   }));
