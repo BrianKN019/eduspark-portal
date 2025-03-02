@@ -39,14 +39,12 @@ const CourseDetail = () => {
           .eq('course_id', courseId)
           .single();
           
-        if (error) {
-          if (error.code !== 'PGRST116') { // Not found error
-            console.error("Error fetching course progress:", error);
-          }
-          return null;
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error fetching course progress:", error);
+          throw error;
         }
         
-        return data;
+        return data || null;
       } catch (e) {
         console.error("Exception in course progress query:", e);
         return null;
@@ -69,20 +67,13 @@ const CourseDetail = () => {
           .eq('course_id', courseId)
           .single();
           
-        if (error) {
-          if (error.code !== 'PGRST116') { // Not found error
-            console.error("Error fetching certificate:", error);
-          }
-          return null;
-        }
-        
-        return data;
+        return error?.code === 'PGRST116' ? null : data;
       } catch (e) {
         console.error("Exception in certificate query:", e);
         return null;
       }
     },
-    enabled: !!courseId,
+    enabled: !!courseId && hasCompletedCourse,
   });
 
   useEffect(() => {
@@ -90,22 +81,19 @@ const CourseDetail = () => {
       setUserProgress(progress.progress_percentage);
       setIsEnrolled(true);
       setHasCompletedCourse(progress.completed);
-      if (progress.current_lesson_index !== undefined && progress.current_lesson_index !== null) {
-        setCurrentLessonIndex(progress.current_lesson_index);
-      }
+      setCurrentLessonIndex(progress.current_lesson_index || 0);
     }
+  }, [progress]);
 
-    if (certificate) {
-      setHasCertificate(true);
-    }
-  }, [progress, certificate]);
+  useEffect(() => {
+    setHasCertificate(!!certificate);
+  }, [certificate]);
 
   const handleEnroll = async () => {
     try {
       if (!courseId) return;
       
-      const result = await updateCourseProgress(courseId, 0);
-      console.log("Enrollment result:", result);
+      await updateCourseProgress(courseId, 0, 0);
       toast.success("Successfully enrolled in the course!");
       setIsEnrolled(true);
       refetchProgress();
@@ -120,17 +108,21 @@ const CourseDetail = () => {
       if (!courseId || !course) return;
       
       const totalLessons = course.lessons_count;
-      const newProgress = Math.min(Math.round(((lessonIndex + 1) / totalLessons) * 100), 100);
+      const newIndex = Math.min(lessonIndex + 1, totalLessons - 1);
+      const newProgress = Math.min(Math.round(((newIndex + 1) / totalLessons) * 100), 100);
       
-      await updateCourseProgress(courseId, newProgress, lessonIndex);
+      await updateCourseProgress(courseId, newProgress, newIndex);
+      
       setUserProgress(newProgress);
+      setCurrentLessonIndex(newIndex);
       
       if (newProgress === 100) {
         setHasCompletedCourse(true);
         toast.success("Congratulations! You've completed the course!");
       } else {
-        toast.success("Lesson completed!");
+        toast.success("Progress saved successfully!");
       }
+      
       refetchProgress();
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -164,15 +156,13 @@ const CourseDetail = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             courseId={courseId || ''}
-            courseName={course.title}
-            field={course.field}
-            level={course.level}
+            course={course}
             hasCompletedCourse={hasCompletedCourse}
             currentLessonIndex={currentLessonIndex}
             setCurrentLessonIndex={setCurrentLessonIndex}
             onLessonComplete={handleLessonComplete}
             userProgress={userProgress}
-            certificateDate={certificate?.earned_date || new Date().toISOString()}
+            certificate={certificate}
           />
         </div>
         

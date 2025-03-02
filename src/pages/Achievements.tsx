@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +11,13 @@ import { fetchUserAchievements, fetchLeaderboard } from '@/lib/api';
 import { Badge, UserAchievements, LeaderboardEntry, Certificate } from '@/types/achievements';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+
+// Interface for MilestoneCard props
+interface MilestoneCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: number;
+}
 
 const Achievements: React.FC = () => {
   const achievementsQuery = useQuery({
@@ -28,6 +36,15 @@ const Achievements: React.FC = () => {
   
   const leaderboardData = leaderboardQuery.data as LeaderboardEntry[] | undefined;
   const leaderboardLoading = leaderboardQuery.isLoading;
+
+  // Helper functions for type casting
+  const getTier = (tier: string): Badge['tier'] => 
+    ['bronze', 'silver', 'gold'].includes(tier) ? tier as Badge['tier'] : 'bronze';
+
+  const getCategory = (category: string): Badge['category'] =>
+    ['course', 'achievement', 'streak', 'milestone'].includes(category) 
+      ? category as Badge['category'] 
+      : 'achievement';
 
   useEffect(() => {
     const checkForNewBadges = async () => {
@@ -121,12 +138,8 @@ const Achievements: React.FC = () => {
         name: badgeData.name,
         description: badgeData.description,
         imageUrl: badgeData.imageUrl,
-        tier: (['bronze', 'silver', 'gold'].includes(badgeData.tier as string) 
-          ? badgeData.tier as 'bronze' | 'silver' | 'gold'
-          : 'bronze'),
-        category: (['course', 'achievement', 'streak', 'milestone'].includes(badgeData.category as string)
-          ? badgeData.category as 'course' | 'achievement' | 'streak' | 'milestone'
-          : 'achievement')
+        tier: getTier(badgeData.tier),
+        category: getCategory(badgeData.category)
       };
       typedBadges.push(badge);
     });
@@ -206,7 +219,7 @@ const Achievements: React.FC = () => {
   );
 };
 
-const MilestoneCard: React.FC<{ icon: React.ReactNode; title: string; value: number }> = ({ icon, title, value }) => (
+const MilestoneCard: React.FC<MilestoneCardProps> = ({ icon, title, value }) => (
   <Card className="neumorphic-card neumorphic-convex">
     <CardContent className="flex items-center p-4">
       <div className="mr-4">{icon}</div>
