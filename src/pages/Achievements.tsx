@@ -121,15 +121,12 @@ const Achievements: React.FC = () => {
         name: badgeData.name,
         description: badgeData.description,
         imageUrl: badgeData.imageUrl,
-        tier: badgeData.tier === 'bronze' || badgeData.tier === 'silver' || badgeData.tier === 'gold' 
-          ? badgeData.tier 
-          : 'bronze',
-        category: badgeData.category === 'course' || 
-          badgeData.category === 'achievement' || 
-          badgeData.category === 'streak' || 
-          badgeData.category === 'milestone' 
-            ? badgeData.category 
-            : 'achievement'
+        tier: (['bronze', 'silver', 'gold'].includes(badgeData.tier as string) 
+          ? badgeData.tier as 'bronze' | 'silver' | 'gold'
+          : 'bronze'),
+        category: (['course', 'achievement', 'streak', 'milestone'].includes(badgeData.category as string)
+          ? badgeData.category as 'course' | 'achievement' | 'streak' | 'milestone'
+          : 'achievement')
       };
       typedBadges.push(badge);
     });
