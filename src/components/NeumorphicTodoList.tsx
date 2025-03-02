@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { HexColorPicker } from "react-colorful";
 
+// Define the Task interface
 interface Task {
   id: string;
   text: string;
@@ -28,6 +29,7 @@ interface Task {
   user_id: string;
 }
 
+// Define the TaskData interface for database operations
 interface TaskData {
   id: string;
   text: string;

@@ -71,14 +71,14 @@ const Achievements: React.FC = () => {
                 category: 'course'
               });
               
-              // Add certificate
+              // Add certificate - Fixed the property names to match the schema
               await supabase.from('certificates').insert({
                 user_id: user.id,
                 course_id: course.course_id,
-                title: courseData.title,
+                name: courseData.title, // Changed from title to name
                 description: `Successfully completed ${courseData.title} with a score of 100%`,
                 earned_date: new Date().toISOString(),
-                certificate_url: `/certificates/${course.course_id}.pdf`
+                download_url: `/certificates/${course.course_id}.pdf` // Changed from certificate_url to download_url
               });
               
               toast.success(`You've earned a new badge for completing ${courseData.title}!`);
@@ -112,11 +112,12 @@ const Achievements: React.FC = () => {
     </div>;
   }
 
-  const typedBadges: Badge[] = userAchievements?.badges.map(badge => ({
+  // Type assertion to avoid infinite recursion in type instantiation
+  const typedBadges: Badge[] = (userAchievements?.badges || []).map(badge => ({
     ...badge,
     tier: badge.tier as 'bronze' | 'silver' | 'gold',
     category: badge.category as 'course' | 'achievement' | 'streak' | 'milestone'
-  })) || [];
+  }));
 
   return (
     <div className="space-y-6 p-6">

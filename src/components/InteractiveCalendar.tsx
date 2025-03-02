@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { HexColorPicker } from "react-colorful";
 
+// Define the calendar event interface
 interface CalendarEvent {
   id: string;
   title: string;
@@ -32,6 +33,7 @@ interface CalendarEvent {
   };
 }
 
+// Define the calendar event data interface for the database
 interface CalendarEventData {
   id: string;
   title: string;
