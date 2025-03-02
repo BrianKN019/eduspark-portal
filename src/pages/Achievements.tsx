@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,16 +20,23 @@ interface MilestoneCardProps {
 }
 
 const Achievements: React.FC = () => {
-  // Define explicit type parameters for useQuery to prevent deep type instantiation
-  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements>({
+  // Use type assertions instead of generic parameters to avoid deep type instantiation
+  const achievementsQuery = useQuery({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
   
-  const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery<LeaderboardEntry[]>({
+  const userAchievements = achievementsQuery.data as UserAchievements | undefined;
+  const achievementsLoading = achievementsQuery.isLoading;
+  const refetchAchievements = achievementsQuery.refetch;
+
+  const leaderboardQuery = useQuery({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
   });
+  
+  const leaderboardData = leaderboardQuery.data as LeaderboardEntry[] | undefined;
+  const leaderboardLoading = leaderboardQuery.isLoading;
 
   // Helper functions for type casting
   const getTier = (tier: string): Badge['tier'] => 
