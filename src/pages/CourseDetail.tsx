@@ -37,7 +37,7 @@ const CourseDetail = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .single();
+          .maybeSingle();
           
         if (error && error.code !== 'PGRST116') {
           console.error("Error fetching course progress:", error);
@@ -65,7 +65,7 @@ const CourseDetail = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .single();
+          .maybeSingle();
           
         return error?.code === 'PGRST116' ? null : data;
       } catch (e) {
@@ -146,6 +146,9 @@ const CourseDetail = () => {
     );
   }
 
+  // Calculate certificate date from certificate data if available
+  const certificateDate = certificate?.earned_date || '';
+
   return (
     <div className="container mx-auto py-6 px-4 space-y-8">
       <CourseHeader course={course} />
@@ -156,13 +159,15 @@ const CourseDetail = () => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             courseId={courseId || ''}
-            course={course}
+            courseName={course.title}
+            field={course.field}
+            level={course.level}
             hasCompletedCourse={hasCompletedCourse}
             currentLessonIndex={currentLessonIndex}
             setCurrentLessonIndex={setCurrentLessonIndex}
             onLessonComplete={handleLessonComplete}
             userProgress={userProgress}
-            certificate={certificate}
+            certificateDate={certificateDate}
           />
         </div>
         

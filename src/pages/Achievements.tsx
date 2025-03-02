@@ -20,21 +20,22 @@ interface MilestoneCardProps {
 }
 
 const Achievements: React.FC = () => {
-  const achievementsQuery = useQuery({
+  // Use explicit type annotations for query results to prevent deep type instantiation
+  const achievementsQuery = useQuery<UserAchievements, Error>({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
   
-  const userAchievements = achievementsQuery.data as UserAchievements | undefined;
+  const userAchievements = achievementsQuery.data;
   const achievementsLoading = achievementsQuery.isLoading;
   const refetchAchievements = achievementsQuery.refetch;
 
-  const leaderboardQuery = useQuery({
+  const leaderboardQuery = useQuery<LeaderboardEntry[], Error>({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
   });
   
-  const leaderboardData = leaderboardQuery.data as LeaderboardEntry[] | undefined;
+  const leaderboardData = leaderboardQuery.data;
   const leaderboardLoading = leaderboardQuery.isLoading;
 
   // Helper functions for type casting
@@ -67,14 +68,14 @@ const Achievements: React.FC = () => {
             .eq('user_id', user.id)
             .eq('source_id', course.course_id)
             .eq('source_type', 'course')
-            .single();
+            .maybeSingle();
             
           if (!existingBadge) {
             const { data: courseData } = await supabase
               .from('courses')
               .select('title, field, level')
               .eq('id', course.course_id)
-              .single();
+              .maybeSingle();
               
             if (courseData) {
               await supabase.from('user_badges').insert({
@@ -129,19 +130,19 @@ const Achievements: React.FC = () => {
     </div>;
   }
 
+  // Initialize the badges array with proper typing
   const typedBadges: Badge[] = [];
   
   if (userAchievements?.badges) {
     userAchievements.badges.forEach(badgeData => {
-      const badge: Badge = {
+      typedBadges.push({
         id: badgeData.id,
         name: badgeData.name,
         description: badgeData.description,
         imageUrl: badgeData.imageUrl,
         tier: getTier(badgeData.tier),
         category: getCategory(badgeData.category)
-      };
-      typedBadges.push(badge);
+      });
     });
   }
 
