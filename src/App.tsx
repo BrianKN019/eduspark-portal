@@ -16,7 +16,6 @@ import Discussions from "./pages/Discussions";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
-import Achievements from "./pages/Achievements";
 import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
 import ResourceLibrary from "./pages/ResourceLibrary";
@@ -93,7 +92,6 @@ const App = () => {
                   <Route path="analytics" element={<Analytics />} />
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="discussions" element={<Discussions />} />
-                  <Route path="achievements" element={<Achievements />} />
                   <Route path="learning-paths" element={<LearningPaths />} />
                   <Route path="community" element={<Community />} />
                   <Route path="resource-library" element={<ResourceLibrary />} />
