@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,17 +8,19 @@ import Leaderboard from '@/components/achievements/Leaderboard';
 import CertificateList from '@/components/achievements/CertificateList';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserAchievements, fetchLeaderboard } from '@/lib/api';
-import { Badge, UserAchievements } from '@/types/achievements';
+import { Badge, UserAchievements, LeaderboardEntry, Certificate } from '@/types/achievements';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const Achievements: React.FC = () => {
-  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements, Error>({
+  // Use explicit type parameters for useQuery to avoid type recursion
+  const { data: userAchievements, isLoading: achievementsLoading, refetch: refetchAchievements } = useQuery<UserAchievements>({
     queryKey: ['userAchievements'],
     queryFn: fetchUserAchievements,
   });
 
-  const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery({
+  // Use explicit type parameter for leaderboard data
+  const { data: leaderboardData, isLoading: leaderboardLoading } = useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
   });
@@ -105,14 +108,22 @@ const Achievements: React.FC = () => {
     </div>;
   }
 
-  const typedBadges: Badge[] = (userAchievements?.badges || []).map(badge => ({
-    id: badge.id,
-    name: badge.name,
-    description: badge.description,
-    imageUrl: badge.imageUrl,
-    tier: badge.tier as 'bronze' | 'silver' | 'gold',
-    category: badge.category as 'course' | 'achievement' | 'streak' | 'milestone'
-  }));
+  // Create a new array of Badge objects instead of transforming existing objects to avoid type recursion
+  const typedBadges: Badge[] = (userAchievements?.badges || []).map(badge => {
+    // Create a completely new object with only the properties needed
+    const newBadge: Badge = {
+      id: badge.id,
+      name: badge.name,
+      description: badge.description,
+      imageUrl: badge.imageUrl,
+      tier: (badge.tier as 'bronze' | 'silver' | 'gold') || 'bronze',
+      category: (badge.category as 'course' | 'achievement' | 'streak' | 'milestone') || 'achievement'
+    };
+    return newBadge;
+  });
+
+  // Create certificates with explicit typing
+  const typedCertificates: Certificate[] = userAchievements?.certificates || [];
 
   return (
     <div className="space-y-6 p-6">
@@ -159,7 +170,7 @@ const Achievements: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CertificateList certificates={userAchievements?.certificates || []} />
+              <CertificateList certificates={typedCertificates} />
             </CardContent>
           </Card>
         </TabsContent>
