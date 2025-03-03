@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,9 +72,9 @@ const Certificate: React.FC<CertificateProps> = ({
       
       // Capture certificate with high quality settings
       const canvas = await html2canvas(certificateElement, {
-        scale: 3, // Higher resolution for better quality
+        scale: 4, // Higher resolution for better quality
         logging: false,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         useCORS: true,
         allowTaint: true,
         windowWidth: certificateElement.scrollWidth,
@@ -87,7 +86,7 @@ const Certificate: React.FC<CertificateProps> = ({
       
       const imgData = canvas.toDataURL('image/png', 1.0);
       
-      // Create PDF with proper sizing
+      // Create PDF with proper sizing for single page fit
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -95,39 +94,28 @@ const Certificate: React.FC<CertificateProps> = ({
         compress: true
       });
       
-      // Calculate dimensions to fit the PDF properly without cropping
+      // Get PDF dimensions
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      const canvasRatio = canvas.width / canvas.height;
-      const pdfRatio = pdfWidth / pdfHeight;
+      // Calculate dimensions to fit the certificate on a single page
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      let imgWidth, imgHeight, xOffset, yOffset;
+      // Center the image
+      const x = 10; // left margin
+      const y = (pdfHeight - imgHeight) / 2; // center vertically
       
-      if (canvasRatio > pdfRatio) {
-        // Image is wider than PDF
-        imgWidth = pdfWidth;
-        imgHeight = imgWidth / canvasRatio;
-        xOffset = 0;
-        yOffset = (pdfHeight - imgHeight) / 2;
-      } else {
-        // Image is taller than PDF
-        imgHeight = pdfHeight;
-        imgWidth = imgHeight * canvasRatio;
-        xOffset = (pdfWidth - imgWidth) / 2;
-        yOffset = 0;
-      }
-      
-      // Add image with proper positioning to avoid cropping
-      pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
+      // Add image
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
       // Save PDF
-      pdf.save(`${courseName.replace(/\s+/g, '_')}_Certificate.pdf`);
+      const fileName = `${courseName.replace(/\s+/g, '_')}_Certificate.pdf`;
+      pdf.save(fileName);
       
       // Store certificate in database if it doesn't exist
       const { data: { user } } = await supabase.auth.getUser();
       if (user && !certificateExists) {
-        const pdfFileName = `${courseName.replace(/\s+/g, '_')}_Certificate.pdf`;
         await supabase
           .from('certificates')
           .insert({
@@ -135,7 +123,7 @@ const Certificate: React.FC<CertificateProps> = ({
             course_id: courseId,
             name: `${courseName} Certificate`,
             description: `Certificate of completion for ${courseName}`,
-            download_url: `/certificates/${pdfFileName}`,
+            download_url: `/certificates/${fileName}`,
             earned_date: new Date().toISOString()
           });
           

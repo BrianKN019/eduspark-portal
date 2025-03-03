@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
@@ -13,14 +14,15 @@ import {
   Map, 
   Users, 
   Library, 
-  Menu, 
   X, 
   ChevronLeft,
   ChevronRight,
   Sparkles,
   GitBranch,
   BarChart3,
-  CalendarDays
+  CalendarDays,
+  LayoutDashboard,
+  SquareMenu 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -57,6 +59,7 @@ const Sidebar: React.FC = () => {
     { name: "Community", href: "/community", icon: Users },
     { name: "Resource Library", href: "/resource-library", icon: Library },
     { name: "Achievements", href: "/achievements", icon: Award },
+    { name: "Profile", href: "/profile", icon: User },
   ];
 
   const toggleMobileMenu = () => {
@@ -80,21 +83,21 @@ const Sidebar: React.FC = () => {
   return (
     <>
       <Button
-        className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
+        className="fixed top-4 left-4 z-50 md:hidden bg-gradient-to-r from-blue-500/80 to-purple-600/80 backdrop-blur-sm shadow-lg border border-blue-400/20 rounded-full"
         onClick={toggleMobileMenu}
         size="icon"
         variant="outline"
         aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
       >
         {isMobileMenuOpen ? (
-          <X className="h-6 w-6" />
+          <X className="h-6 w-6 text-white" />
         ) : (
-          <Menu className="h-6 w-6" />
+          <SquareMenu className="h-6 w-6 text-white" />
         )}
       </Button>
 
       <div 
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${
           isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setIsMobileMenuOpen(false)}
