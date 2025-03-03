@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { updateCourseProgress } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Sample course content structure - in a real app, this would come from an API
