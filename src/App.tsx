@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ import Login from "./pages/Login";
 import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
 import ResourceLibrary from "./pages/ResourceLibrary";
+import Achievements from "./pages/Achievements";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 

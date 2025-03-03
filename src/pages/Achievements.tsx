@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,19 +20,17 @@ const AchievementsPage = () => {
     achievements: 0
   });
 
-  // Use type assertion to avoid excessive type instantiation
   const { data: achievements } = useQuery({
     queryKey: ['achievements'],
     queryFn: fetchUserAchievements,
     staleTime: 300000, // 5 minutes
-  }) as { data: UserAchievements | undefined };
+  });
 
-  // Use type assertion to avoid excessive type instantiation
   const { data: leaderboard } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: fetchLeaderboard,
     staleTime: 300000, // 5 minutes
-  }) as { data: LeaderboardEntry[] | undefined };
+  });
 
   useEffect(() => {
     if (achievements) {
@@ -56,7 +53,6 @@ const AchievementsPage = () => {
     return userIndex !== -1 ? userIndex + 1 : leaderboard.length + 1;
   };
 
-  // Calculate progress percentage for different achievement levels
   const getProgressToNextLevel = () => {
     const currentBadges = userProgress.achievements;
     
@@ -77,7 +73,6 @@ const AchievementsPage = () => {
         </div>
       </div>
 
-      {/* Achievement Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Learning Streak" 
@@ -113,7 +108,6 @@ const AchievementsPage = () => {
         />
       </div>
 
-      {/* Progress to Next Level */}
       <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
@@ -157,7 +151,6 @@ const AchievementsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Main Tabs Section */}
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-8">
           <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
