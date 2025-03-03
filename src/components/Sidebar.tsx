@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
@@ -18,7 +17,10 @@ import {
   X, 
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  GitBranch,
+  BarChart3,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -28,7 +30,6 @@ const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState('/');
 
-  // Close mobile menu when screen size increases
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -40,25 +41,22 @@ const Sidebar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setActiveItem(window.location.pathname);
   }, [window.location.pathname]);
 
-  const navItems = [
-    { to: '/', icon: Home, label: 'Dashboard' },
-    { to: '/courses', icon: BookOpen, label: 'Courses' },
-    { to: '/live-classes', icon: Video, label: 'Live Classes' },
-    { to: '/analytics', icon: BarChart2, label: 'Analytics' },
-    { to: '/calendar', icon: Calendar, label: 'Calendar' },
-    { to: '/discussions', icon: MessageSquare, label: 'Discussions' },
-    { to: '/achievements', icon: Award, label: 'Achievements & Badges' },
-    { to: '/learning-paths', icon: Map, label: 'Learning Paths' },
-    { to: '/community', icon: Users, label: 'Community & Forums' },
-    { to: '/resource-library', icon: Library, label: 'Resource Library' },
-    { to: '/profile', icon: User, label: 'Profile' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
+  const navigationItems = [
+    { name: "Dashboard", href: "/", icon: Home },
+    { name: "Courses", href: "/courses", icon: BookOpen },
+    { name: "Live Classes", href: "/live-classes", icon: Video },
+    { name: "Learning Paths", href: "/learning-paths", icon: GitBranch },
+    { name: "Analytics", href: "/analytics", icon: BarChart3 },
+    { name: "Calendar", href: "/calendar", icon: CalendarDays },
+    { name: "Discussions", href: "/discussions", icon: MessageSquare },
+    { name: "Community", href: "/community", icon: Users },
+    { name: "Resource Library", href: "/resource-library", icon: Library },
+    { name: "Achievements", href: "/achievements", icon: Award },
   ];
 
   const toggleMobileMenu = () => {
@@ -69,7 +67,6 @@ const Sidebar: React.FC = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Animation variants
   const sidebarVariants = {
     expanded: { width: "16rem" },
     collapsed: { width: "4rem" }
@@ -82,7 +79,6 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Mobile menu button - moved to a better position */}
       <Button
         className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
         onClick={toggleMobileMenu}
@@ -97,7 +93,6 @@ const Sidebar: React.FC = () => {
         )}
       </Button>
 
-      {/* Backdrop overlay that only appears in mobile mode */}
       <div 
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
           isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -106,7 +101,6 @@ const Sidebar: React.FC = () => {
         aria-hidden="true"
       />
       
-      {/* Sidebar content - position fixed for mobile, relative for desktop */}
       <motion.aside 
         className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 
         text-card-foreground max-h-screen overflow-y-auto py-7 px-2 ${
@@ -146,12 +140,12 @@ const Sidebar: React.FC = () => {
         
         <nav>
           <ul className="space-y-1.5">
-            {navItems.map((item) => (
-              <li key={item.to}>
+            {navigationItems.map((item) => (
+              <li key={item.href}>
                 <NavLink
-                  to={item.to}
+                  to={item.href}
                   className={({ isActive }) => {
-                    const isCurrentActive = isActive || activeItem === item.to;
+                    const isCurrentActive = isActive || activeItem === item.href;
                     return `
                       flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3 px-4'} py-3 rounded-lg
                       transition-all duration-200 overflow-hidden group relative
@@ -162,12 +156,12 @@ const Sidebar: React.FC = () => {
                   }}
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    setActiveItem(item.to);
+                    setActiveItem(item.href);
                   }}
-                  title={isCollapsed ? item.label : undefined}
+                  title={isCollapsed ? item.name : undefined}
                 >
                   <div className={`
-                    ${activeItem === item.to ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'} 
+                    ${activeItem === item.href ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'} 
                     ${isCollapsed ? 'mx-auto' : ''}
                   `}>
                     <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -180,12 +174,11 @@ const Sidebar: React.FC = () => {
                       animate={isCollapsed ? "collapsed" : "expanded"}
                       className="whitespace-nowrap"
                     >
-                      {item.label}
+                      {item.name}
                     </motion.span>
                   )}
 
-                  {/* Highlight indicator */}
-                  {activeItem === item.to && (
+                  {activeItem === item.href && (
                     <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-600 to-blue-500 rounded-r"></div>
                   )}
                 </NavLink>

@@ -23,22 +23,34 @@ const Certificate: React.FC<CertificateProps> = ({
   const certificateRef = useRef<HTMLDivElement>(null);
   const [studentName, setStudentName] = useState<string>('Student Name');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [certificateExists, setCertificateExists] = useState(false);
 
-  // Fetch current user's name
+  // Fetch current user's name and check if certificate exists
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          // Get user profile
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
             
           if (profile && profile.full_name) {
             setStudentName(profile.full_name);
           }
+          
+          // Check if certificate exists
+          const { data: existingCert } = await supabase
+            .from('certificates')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('course_id', courseId)
+            .maybeSingle();
+            
+          setCertificateExists(!!existingCert);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -46,7 +58,7 @@ const Certificate: React.FC<CertificateProps> = ({
     };
 
     fetchUserProfile();
-  }, []);
+  }, [courseId]);
   
   const handleDownload = async () => {
     if (!certificateRef.current) return;
@@ -59,9 +71,9 @@ const Certificate: React.FC<CertificateProps> = ({
       const buttonsElement = document.getElementById('certificate-buttons');
       if (buttonsElement) buttonsElement.style.display = 'none';
       
-      // Use higher resolution and better settings for the PDF
+      // Capture certificate with high quality settings
       const canvas = await html2canvas(certificateElement, {
-        scale: 4, // Higher resolution for better quality
+        scale: 3, // Higher resolution for better quality
         logging: false,
         backgroundColor: null,
         useCORS: true,
@@ -74,45 +86,60 @@ const Certificate: React.FC<CertificateProps> = ({
       if (buttonsElement) buttonsElement.style.display = 'flex';
       
       const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      // Create PDF with proper sizing
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
       
       // Calculate dimensions to fit the PDF properly without cropping
-      const imgWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Ensure the image is not cropped by adjusting position if needed
-      const yPosition = Math.max(0, (pdf.internal.pageSize.getHeight() - imgHeight) / 2);
+      const canvasRatio = canvas.width / canvas.height;
+      const pdfRatio = pdfWidth / pdfHeight;
       
-      pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
+      let imgWidth, imgHeight, xOffset, yOffset;
+      
+      if (canvasRatio > pdfRatio) {
+        // Image is wider than PDF
+        imgWidth = pdfWidth;
+        imgHeight = imgWidth / canvasRatio;
+        xOffset = 0;
+        yOffset = (pdfHeight - imgHeight) / 2;
+      } else {
+        // Image is taller than PDF
+        imgHeight = pdfHeight;
+        imgWidth = imgHeight * canvasRatio;
+        xOffset = (pdfWidth - imgWidth) / 2;
+        yOffset = 0;
+      }
+      
+      // Add image with proper positioning to avoid cropping
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, imgHeight);
+      
+      // Save PDF
       pdf.save(`${courseName.replace(/\s+/g, '_')}_Certificate.pdf`);
       
       // Store certificate in database if it doesn't exist
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: existingCert } = await supabase
+      if (user && !certificateExists) {
+        const pdfFileName = `${courseName.replace(/\s+/g, '_')}_Certificate.pdf`;
+        await supabase
           .from('certificates')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('course_id', courseId)
-          .maybeSingle();
+          .insert({
+            user_id: user.id,
+            course_id: courseId,
+            name: `${courseName} Certificate`,
+            description: `Certificate of completion for ${courseName}`,
+            download_url: `/certificates/${pdfFileName}`,
+            earned_date: new Date().toISOString()
+          });
           
-        if (!existingCert) {
-          const pdfFileName = `${courseName.replace(/\s+/g, '_')}_Certificate.pdf`;
-          await supabase
-            .from('certificates')
-            .insert({
-              user_id: user.id,
-              course_id: courseId,
-              name: `${courseName} Certificate`,
-              description: `Certificate of completion for ${courseName}`,
-              download_url: `/certificates/${pdfFileName}`,
-              earned_date: new Date().toISOString()
-            });
-        }
+        setCertificateExists(true);
       }
       
       toast.success("Certificate downloaded successfully!");
@@ -176,7 +203,7 @@ const Certificate: React.FC<CertificateProps> = ({
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    // Format to show only the current year
+    // Format date in a more formal way for certificates
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -186,11 +213,14 @@ const Certificate: React.FC<CertificateProps> = ({
   
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border-0 shadow-xl overflow-hidden">
         <CardContent className="p-6">
           <div className="flex flex-col items-center space-y-4 mb-6">
-            <Award className="h-16 w-16 text-yellow-500" />
-            <h2 className="text-2xl font-bold text-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md opacity-30 animate-pulse"></div>
+              <Award className="h-16 w-16 text-yellow-500 relative z-10" />
+            </div>
+            <h2 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
               Congratulations on completing the course!
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300">
@@ -200,7 +230,7 @@ const Certificate: React.FC<CertificateProps> = ({
           
           <div 
             ref={certificateRef}
-            className="border-8 border-double border-yellow-200 dark:border-yellow-700 p-8 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg"
+            className="certificate-container border-8 border-double border-yellow-200 dark:border-yellow-700 p-8 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg"
           >
             <div className="text-center space-y-6 relative">
               {/* Premium border design */}
@@ -220,12 +250,14 @@ const Certificate: React.FC<CertificateProps> = ({
                 <h2 className="text-2xl font-bold my-3 font-serif">{studentName}</h2>
                 <p className="text-gray-600 dark:text-gray-300">has successfully completed</p>
                 <h3 className="text-2xl font-bold my-3 font-serif">{courseName}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">on {formatDate(completionDate)}</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">on {formatDate(completionDate || new Date().toISOString())}</p>
                 
                 {/* Signature and stamp section */}
                 <div className="flex justify-around items-center mt-8">
                   <div className="text-center">
-                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400"></div>
+                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
+                      <div className="font-signature text-lg text-gray-700 dark:text-gray-300 transform -rotate-2">Jane Smith</div>
+                    </div>
                     <p className="font-bold">Course Director</p>
                   </div>
                   <div className="flex items-center justify-center w-24 h-24 border-2 border-dashed border-yellow-600 dark:border-yellow-500 rounded-full">
@@ -234,7 +266,9 @@ const Certificate: React.FC<CertificateProps> = ({
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400"></div>
+                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
+                      <div className="font-signature text-lg text-gray-700 dark:text-gray-300 transform rotate-1">John Doe</div>
+                    </div>
                     <p className="font-bold">EduSpark Director</p>
                   </div>
                 </div>
@@ -262,7 +296,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
+              className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 shadow-md hover:shadow-lg transition-all duration-300"
             >
               {isDownloading ? (
                 <>Downloading...</>
@@ -275,7 +309,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               variant="outline"
               onClick={handleShare}
-              className="border-yellow-400 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+              className="border-yellow-400 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 shadow-md hover:shadow-lg transition-all duration-300"
             >
               <Share2 className="mr-2 h-4 w-4" /> Share Achievement
             </Button>
