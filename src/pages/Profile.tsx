@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
@@ -26,6 +27,19 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Create storage bucket for avatars if it doesn't exist
+    const setupStorage = async () => {
+      const { data, error } = await supabase.storage.getBucket('avatars');
+      if (error && error.code === 'PGRST116') {
+        // Bucket doesn't exist, create it
+        await supabase.storage.createBucket('avatars', {
+          public: true,
+          fileSizeLimit: 1024 * 1024 * 2 // 2MB
+        });
+      }
+    };
+    
+    setupStorage();
     fetchUserProfile();
     fetchCourseProgresses();
   }, []);
@@ -108,15 +122,20 @@ const Profile: React.FC = () => {
           occupation: userProfile.occupation,
           bio: userProfile.bio,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
         });
       
       if (error) throw error;
       
       toast.success('Profile updated successfully');
       setIsEditing(false);
-    } catch (error) {
+      
+      // Refresh the profile data
+      fetchUserProfile();
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error(error.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -139,13 +158,13 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-3xl font-bold">User Profile</h2>
+    <div className="space-y-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">My Profile</h2>
         <Button 
           onClick={handleLogout}
           variant="destructive"
-          className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800"
+          className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
         >
           <LogOut className="h-4 w-4" />
           Log Out
@@ -174,7 +193,7 @@ const Profile: React.FC = () => {
       {!isEditing && (
         <Button 
           onClick={() => setIsEditing(true)}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-2.5 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2.5 rounded-lg shadow-md shadow-purple-500/20 transition-all duration-300"
         >
           Edit Profile
         </Button>

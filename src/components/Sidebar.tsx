@@ -22,10 +22,11 @@ import {
   BarChart3,
   CalendarDays,
   LayoutDashboard,
-  SquareMenu 
+  SquareMenu,
+  Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Sidebar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -72,77 +73,157 @@ const Sidebar: React.FC = () => {
 
   const sidebarVariants = {
     expanded: { width: "16rem" },
-    collapsed: { width: "4rem" }
+    collapsed: { width: "5rem" }
   };
 
-  const itemVariants = {
-    expanded: { opacity: 1, x: 0 },
-    collapsed: { opacity: 0, x: -10 }
+  const itemTextVariants = {
+    expanded: { opacity: 1, x: 0, display: "block" },
+    collapsed: { 
+      opacity: 0, 
+      x: -10, 
+      transitionEnd: { display: "none" } 
+    }
+  };
+
+  const mobileMenuVariants = {
+    open: { 
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    closed: { 
+      x: "-100%",
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    }
   };
 
   return (
     <>
+      {/* Mobile Menu Toggle Button */}
       <Button
-        className="fixed top-4 left-4 z-50 md:hidden bg-gradient-to-r from-blue-500/80 to-purple-600/80 backdrop-blur-sm shadow-lg border border-blue-400/20 rounded-full"
+        className="fixed top-4 left-4 z-50 md:hidden bg-gradient-to-r from-purple-500/90 to-blue-500/90 backdrop-blur-sm shadow-lg border border-purple-400/20 rounded-full"
         onClick={toggleMobileMenu}
         size="icon"
         variant="outline"
         aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
       >
         {isMobileMenuOpen ? (
-          <X className="h-6 w-6 text-white" />
+          <X className="h-5 w-5 text-white" />
         ) : (
-          <SquareMenu className="h-6 w-6 text-white" />
+          <Menu className="h-5 w-5 text-white" />
         )}
       </Button>
 
-      <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${
-          isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-        aria-hidden="true"
-      />
+      {/* Backdrop Overlay for Mobile */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
       
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.aside 
+            className="fixed inset-y-0 left-0 z-40 md:hidden w-64 bg-gradient-to-b from-background to-background border-r border-border/50 shadow-xl"
+            variants={mobileMenuVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+          >
+            <div className="flex justify-between items-center px-4 py-5 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-purple-600" />
+                <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
+                  EduSpark
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleMobileMenu}
+                aria-label="Close menu"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <nav className="px-2 py-4">
+              <ul className="space-y-1">
+                {navigationItems.map((item) => (
+                  <li key={item.href}>
+                    <NavLink
+                      to={item.href}
+                      className={({ isActive }) => {
+                        const isCurrentActive = isActive || activeItem === item.href;
+                        return `
+                          flex items-center space-x-3 px-4 py-3 rounded-lg
+                          transition-all duration-200 group relative
+                          ${isCurrentActive
+                            ? 'bg-gradient-to-r from-purple-600/20 to-blue-500/20 text-purple-600 dark:text-purple-400 font-medium'
+                            : 'hover:bg-purple-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}
+                        `;
+                      }}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setActiveItem(item.href);
+                      }}
+                    >
+                      <div className={activeItem === item.href ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'}>
+                        <item.icon className="h-5 w-5 flex-shrink-0" />
+                      </div>
+                      <span className="whitespace-nowrap">{item.name}</span>
+                      {activeItem === item.href && (
+                        <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-600 to-blue-500 rounded-r"></div>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+      
+      {/* Desktop Sidebar */}
       <motion.aside 
-        className={`bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 
-        text-card-foreground max-h-screen overflow-y-auto py-7 px-2 ${
-          isMobileMenuOpen ? 'fixed' : 'hidden md:block'
-        } md:relative inset-y-0 left-0 z-40 shadow-lg 
-        rounded-r-2xl border-r border-gray-200 dark:border-gray-800`}
+        className="hidden md:block bg-gradient-to-b from-background to-background text-card-foreground max-h-screen overflow-y-auto py-6 border-r border-border/50 shadow-sm relative z-10"
         variants={sidebarVariants}
         initial={isCollapsed ? "collapsed" : "expanded"}
         animate={isCollapsed ? "collapsed" : "expanded"}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <div className="flex justify-between items-center px-3 mb-8">
-          {!isCollapsed && (
-            <motion.div 
-              className="flex items-center gap-2"
-              variants={itemVariants}
-              initial="expanded"
+        <div className={`flex justify-center ${isCollapsed ? 'px-0' : 'px-4'} mb-8`}>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-purple-600" />
+            <motion.span 
+              className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500 whitespace-nowrap"
+              variants={itemTextVariants}
+              initial={isCollapsed ? "collapsed" : "expanded"}
               animate={isCollapsed ? "collapsed" : "expanded"}
             >
-              <Sparkles className="h-6 w-6 text-purple-600" />
-              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
-                EduSpark
-              </span>
-            </motion.div>
-          )}
-          <div className="flex md:hidden">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleMobileMenu}
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+              EduSpark
+            </motion.span>
           </div>
         </div>
         
-        <nav>
-          <ul className="space-y-1.5">
+        <nav className={isCollapsed ? 'px-2' : 'px-3'}>
+          <ul className="space-y-1">
             {navigationItems.map((item) => (
               <li key={item.href}>
                 <NavLink
@@ -150,7 +231,7 @@ const Sidebar: React.FC = () => {
                   className={({ isActive }) => {
                     const isCurrentActive = isActive || activeItem === item.href;
                     return `
-                      flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3 px-4'} py-3 rounded-lg
+                      flex items-center ${isCollapsed ? 'justify-center' : 'px-3'} py-3 rounded-lg
                       transition-all duration-200 overflow-hidden group relative
                       ${isCurrentActive
                         ? 'bg-gradient-to-r from-purple-600/20 to-blue-500/20 text-purple-600 dark:text-purple-400 font-medium'
@@ -158,7 +239,6 @@ const Sidebar: React.FC = () => {
                     `;
                   }}
                   onClick={() => {
-                    setIsMobileMenuOpen(false);
                     setActiveItem(item.href);
                   }}
                   title={isCollapsed ? item.name : undefined}
@@ -172,10 +252,8 @@ const Sidebar: React.FC = () => {
                   
                   {!isCollapsed && (
                     <motion.span
-                      variants={itemVariants}
-                      initial="expanded"
-                      animate={isCollapsed ? "collapsed" : "expanded"}
-                      className="whitespace-nowrap"
+                      variants={itemTextVariants}
+                      className="ml-3 whitespace-nowrap"
                     >
                       {item.name}
                     </motion.span>
@@ -190,7 +268,7 @@ const Sidebar: React.FC = () => {
           </ul>
         </nav>
         
-        <div className="hidden md:block absolute bottom-5 right-2">
+        <div className="absolute bottom-5 right-2">
           <Button 
             variant="ghost" 
             size="icon" 
