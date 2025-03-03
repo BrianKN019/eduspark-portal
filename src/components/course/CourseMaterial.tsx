@@ -130,7 +130,17 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   onProgressUpdate
 }) => {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
+  const [displayedLessonIndex, setDisplayedLessonIndex] = useState<number>(0);
   const totalSteps = courseMaterials.length;
+  
+  // Update displayed lesson when currentLessonIndex changes
+  useEffect(() => {
+    // Ensure we're showing the correct lesson based on currentLessonIndex
+    // currentLessonIndex is 1-based, but displayedLessonIndex needs to be 0-based for array indexing
+    if (currentLessonIndex > 0) {
+      setDisplayedLessonIndex(currentLessonIndex - 1);
+    }
+  }, [currentLessonIndex]);
   
   useEffect(() => {
     fetchCompletedLessons();
@@ -143,7 +153,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       
       const { data, error } = await supabase
         .from('course_progress')
-        .select('completed_lessons, assessment_score')
+        .select('completed_lessons, assessment_score, current_lesson_index')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .single();
@@ -156,20 +166,11 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       if (data?.completed_lessons) {
         setCompletedLessons(data.completed_lessons);
         
-        // If user has completed lessons, show the next uncompleted one
-        if (data.completed_lessons.length > 0 && currentLessonIndex === 0) {
-          // Find the first lesson that has not been completed
-          let nextUncompleted = 0;
-          for (let i = 0; i < totalSteps; i++) {
-            if (!data.completed_lessons.includes(i)) {
-              nextUncompleted = i;
-              break;
-            }
-          }
-          // Ensure we only set the current lesson index once during initialization
-          setTimeout(() => {
-            setCurrentLessonIndex(nextUncompleted + 1); // +1 because steps are 1-indexed
-          }, 0);
+        // If user has a saved current lesson index, use it
+        if (data.current_lesson_index !== null && data.current_lesson_index !== undefined) {
+          setDisplayedLessonIndex(data.current_lesson_index);
+          // Set the current lesson index to match the database
+          setCurrentLessonIndex(data.current_lesson_index + 1); // +1 because currentLessonIndex is 1-based
         }
       }
     } catch (error) {
@@ -214,8 +215,8 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       // Calculate total progress
       const totalProgress = Math.round(materialContribution + assessmentContribution);
       
-      // Update progress in the database
-      await updateCourseProgress(courseId, totalProgress, lessonIndex);
+      // Update progress in the database including the current lesson index
+      await updateCourseProgress(courseId, totalProgress, displayedLessonIndex);
       
       // Notify parent component
       if (onProgressUpdate) {
@@ -230,50 +231,57 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   };
   
   const handleNext = () => {
-    if (currentLessonIndex < totalSteps) {
+    if (displayedLessonIndex < totalSteps - 1) {
       // First mark the current lesson as complete
-      const currentIndex = currentLessonIndex - 1;
-      if (!completedLessons.includes(currentIndex)) {
+      if (!completedLessons.includes(displayedLessonIndex)) {
         if (onLessonComplete) {
-          onLessonComplete(currentIndex).then(() => {
-            // Only move to next lesson after completion is confirmed
-            setCurrentLessonIndex(prevIndex => prevIndex + 1);
+          onLessonComplete(displayedLessonIndex).then(() => {
+            // Move to next lesson after completion is confirmed
+            const nextIndex = displayedLessonIndex + 1;
+            setDisplayedLessonIndex(nextIndex);
+            setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
           }).catch(error => {
             console.error('Error completing lesson:', error);
             toast.error('Failed to complete lesson');
           });
         } else {
-          markLessonComplete(currentIndex);
+          markLessonComplete(displayedLessonIndex);
           // Move to next lesson after marking complete
-          setCurrentLessonIndex(prevIndex => prevIndex + 1);
+          const nextIndex = displayedLessonIndex + 1;
+          setDisplayedLessonIndex(nextIndex);
+          setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
         }
       } else {
         // If already completed, just move to next
-        setCurrentLessonIndex(prevIndex => prevIndex + 1);
+        const nextIndex = displayedLessonIndex + 1;
+        setDisplayedLessonIndex(nextIndex);
+        setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
       }
     }
   };
   
   const handlePrevious = () => {
-    if (currentLessonIndex > 1) {
-      setCurrentLessonIndex(prevIndex => prevIndex - 1);
+    if (displayedLessonIndex > 0) {
+      const prevIndex = displayedLessonIndex - 1;
+      setDisplayedLessonIndex(prevIndex);
+      setCurrentLessonIndex(prevIndex + 1); // +1 because currentLessonIndex is 1-based
     }
   };
   
   const handleStepClick = (step: number) => {
     // Only allow clicking on completed steps or the next available step
-    if (step <= completedLessons.length + 1 || completedLessons.includes(step - 1)) {
-      setCurrentLessonIndex(step);
+    const stepIndex = step - 1; // Convert 1-based step to 0-based index
+    
+    if (stepIndex <= completedLessons.length || completedLessons.includes(stepIndex - 1)) {
+      setDisplayedLessonIndex(stepIndex);
+      setCurrentLessonIndex(step); // Keep currentLessonIndex as 1-based
     } else {
       toast.info('Complete previous lessons first');
     }
   };
   
-  // Add a safeguard to ensure currentLessonIndex is valid
-  const safeCurrentIndex = Math.max(1, Math.min(currentLessonIndex, totalSteps));
-  
-  // Safely access the current material
-  const currentMaterial = courseMaterials[safeCurrentIndex - 1] || courseMaterials[0];
+  // Safely access the current material using displayedLessonIndex
+  const currentMaterial = courseMaterials[displayedLessonIndex] || courseMaterials[0];
 
   // Calculate material progress percentage (just for the stepper display)
   const materialProgressPercentage = completedLessons.length > 0
@@ -283,8 +291,11 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   return (
     <Card className="border border-gray-200 dark:border-gray-700 shadow-lg bg-white dark:bg-gray-900 transition-all duration-300">
       <CardHeader className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-indigo-950 rounded-t-lg">
-        <CardTitle className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">
-          {courseName}
+        <CardTitle className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+          <span className="mr-2">{courseName}</span>
+          <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm py-1 px-2 rounded-md">
+            Lesson {displayedLessonIndex + 1} of {totalSteps}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -296,9 +307,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
             <div className="space-y-4">
               {courseMaterials.map((material, index) => {
                 const stepNumber = index + 1;
-                const isActive = stepNumber === safeCurrentIndex;
+                const isActive = index === displayedLessonIndex;
                 const isCompleted = completedLessons.includes(index);
-                const isClickable = isCompleted || stepNumber <= completedLessons.length + 1;
+                const isClickable = isCompleted || index <= completedLessons.length;
                 
                 return (
                   <div key={index} className="relative">
@@ -435,7 +446,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
             <div className="flex justify-between mt-8">
               <Button
                 onClick={handlePrevious}
-                disabled={safeCurrentIndex === 1}
+                disabled={displayedLessonIndex === 0}
                 variant="outline"
                 className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
@@ -443,7 +454,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 Previous
               </Button>
               
-              {safeCurrentIndex < totalSteps ? (
+              {displayedLessonIndex < totalSteps - 1 ? (
                 <Button
                   onClick={handleNext}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg"
@@ -455,15 +466,15 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 <Button
                   onClick={() => {
                     if (onLessonComplete) {
-                      onLessonComplete(safeCurrentIndex - 1);
+                      onLessonComplete(displayedLessonIndex);
                     } else {
-                      markLessonComplete(safeCurrentIndex - 1);
+                      markLessonComplete(displayedLessonIndex);
                     }
                   }}
-                  disabled={completedLessons.includes(safeCurrentIndex - 1)}
+                  disabled={completedLessons.includes(displayedLessonIndex)}
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50"
                 >
-                  {completedLessons.includes(safeCurrentIndex - 1) ? 
+                  {completedLessons.includes(displayedLessonIndex) ? 
                     'Completed' : 
                     'Mark as Complete'}
                   <CheckCircle className="h-4 w-4" />
