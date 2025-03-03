@@ -19,6 +19,16 @@ const AchievementsPage = () => {
     completed: 0,
     achievements: 0
   });
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUser(data.user);
+    };
+    
+    getCurrentUser();
+  }, []);
 
   const { data: achievements } = useQuery({
     queryKey: ['achievements'],
@@ -44,12 +54,9 @@ const AchievementsPage = () => {
   }, [achievements]);
 
   const getLeaderboardRank = (): number => {
-    if (!leaderboard) return 0;
+    if (!leaderboard || !currentUser) return 0;
     
-    const { data: { user } } = supabase.auth.getUser();
-    if (!user) return 0;
-    
-    const userIndex = leaderboard.findIndex(entry => entry.userId === user.id);
+    const userIndex = leaderboard.findIndex(entry => entry.userId === currentUser.id);
     return userIndex !== -1 ? userIndex + 1 : leaderboard.length + 1;
   };
 
