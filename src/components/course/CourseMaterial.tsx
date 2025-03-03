@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
-import { updateCourseProgress } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -230,22 +229,23 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
     }
   };
   
-  const handleNext = () => {
+  const handleNext = async () => {
     if (displayedLessonIndex < totalSteps - 1) {
-      // First mark the current lesson as complete
+      // First mark the current lesson as complete if not already completed
       if (!completedLessons.includes(displayedLessonIndex)) {
         if (onLessonComplete) {
-          onLessonComplete(displayedLessonIndex).then(() => {
+          try {
+            await onLessonComplete(displayedLessonIndex);
             // Move to next lesson after completion is confirmed
             const nextIndex = displayedLessonIndex + 1;
             setDisplayedLessonIndex(nextIndex);
             setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
-          }).catch(error => {
+          } catch (error) {
             console.error('Error completing lesson:', error);
             toast.error('Failed to complete lesson');
-          });
+          }
         } else {
-          markLessonComplete(displayedLessonIndex);
+          await markLessonComplete(displayedLessonIndex);
           // Move to next lesson after marking complete
           const nextIndex = displayedLessonIndex + 1;
           setDisplayedLessonIndex(nextIndex);
@@ -272,7 +272,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
     // Only allow clicking on completed steps or the next available step
     const stepIndex = step - 1; // Convert 1-based step to 0-based index
     
-    if (stepIndex <= completedLessons.length || completedLessons.includes(stepIndex - 1)) {
+    if (completedLessons.includes(stepIndex) || stepIndex <= Math.max(...completedLessons, -1) + 1) {
       setDisplayedLessonIndex(stepIndex);
       setCurrentLessonIndex(step); // Keep currentLessonIndex as 1-based
     } else {
@@ -309,7 +309,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 const stepNumber = index + 1;
                 const isActive = index === displayedLessonIndex;
                 const isCompleted = completedLessons.includes(index);
-                const isClickable = isCompleted || index <= completedLessons.length;
+                const isClickable = isCompleted || index <= Math.max(...completedLessons, -1) + 1;
                 
                 return (
                   <div key={index} className="relative">
@@ -464,11 +464,11 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 </Button>
               ) : (
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (onLessonComplete) {
-                      onLessonComplete(displayedLessonIndex);
+                      await onLessonComplete(displayedLessonIndex);
                     } else {
-                      markLessonComplete(displayedLessonIndex);
+                      await markLessonComplete(displayedLessonIndex);
                     }
                   }}
                   disabled={completedLessons.includes(displayedLessonIndex)}

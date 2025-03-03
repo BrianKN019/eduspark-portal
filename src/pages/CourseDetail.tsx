@@ -81,7 +81,7 @@ const CourseDetail = () => {
       setUserProgress(progress.progress_percentage);
       setIsEnrolled(true);
       setHasCompletedCourse(progress.completed);
-      setCurrentLessonIndex(progress.current_lesson_index || 0);
+      setCurrentLessonIndex(progress.current_lesson_index !== undefined ? progress.current_lesson_index + 1 : 0);
     }
   }, [progress]);
 
@@ -114,7 +114,7 @@ const CourseDetail = () => {
       await updateCourseProgress(courseId, newProgress, newIndex);
       
       setUserProgress(newProgress);
-      setCurrentLessonIndex(newIndex);
+      setCurrentLessonIndex(newIndex + 1); // Add 1 because currentLessonIndex is 1-based
       
       if (newProgress === 100) {
         setHasCompletedCourse(true);
