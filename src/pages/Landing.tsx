@@ -1,10 +1,17 @@
+
 // src/pages/Landing.tsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Rocket, ShieldCheck, GraduationCap, Lightbulb, Users, Code, MessageSquare, BookOpenCheck, LayoutDashboard, Sparkles, UserPlus, FileCode2, BrainCircuit, Search, Presentation, FileSearch2, ScrollText, ListChecks, BadgeCheck, CalendarCheck2, User2, LucideIcon } from 'lucide-react';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { 
+  ArrowRight, CheckCircle, Rocket, ShieldCheck, GraduationCap, 
+  Lightbulb, Users, Code, MessageSquare, BookOpenCheck, 
+  LayoutDashboard, Sparkles, UserPlus, FileCode2, BrainCircuit, 
+  Search, Presentation, FileSearch2, ScrollText, ListChecks, 
+  BadgeCheck, CalendarCheck2, User2 
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -12,26 +19,26 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
-import { useToast } from "@/components/ui/use-toast"
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 
 const Landing = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check local storage for theme preference on mount
@@ -66,7 +73,7 @@ const Landing = () => {
     toast({
       title: "Subscription Successful!",
       description: "Thank you for subscribing to our newsletter.",
-    })
+    });
   };
 
   const fadeIn = {
@@ -97,17 +104,17 @@ const Landing = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
   };
 
-  const FeatureCard = ({ title, description, icon }: { title: string; description: string; icon: LucideIcon }) => (
+  const FeatureCard = ({ title, description, icon: Icon }) => (
     <motion.div variants={cardVariants} className="p-6 rounded-lg shadow-md bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
       <div className="flex items-center mb-4 text-purple-600 dark:text-purple-400">
-        <icon className="h-6 w-6 mr-2" />
+        <Icon className="h-6 w-6 mr-2" />
         <h3 className="text-lg font-semibold">{title}</h3>
       </div>
       <p className="text-gray-600 dark:text-gray-300">{description}</p>
     </motion.div>
   );
 
-  const FAQItem = ({ question, answer }: { question: string; answer: string }) => (
+  const FAQItem = ({ question, answer }) => (
     <AccordionItem value={question}>
       <AccordionTrigger className="font-semibold text-lg">{question}</AccordionTrigger>
       <AccordionContent className="text-gray-600 dark:text-gray-300">{answer}</AccordionContent>
