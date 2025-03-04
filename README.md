@@ -1,103 +1,119 @@
 
-# 🚀 Advanced Learning Management System
+# 🚀 EduPro - Advanced Learning Management System
 
-Welcome to our cutting-edge Learning Management System! This project combines the power of React, TypeScript, and various modern technologies to create an engaging and interactive learning experience.
+Welcome to EduPro, our cutting-edge Learning Management System! This project combines the power of React, TypeScript, and various modern technologies to create an engaging and interactive learning experience.
 
 ## 🛠 Technologies & Tools
 
-- **Frontend**: React, TypeScript, Vite
+- **Frontend**: React 18+, TypeScript, Vite
 - **UI Components**: shadcn/ui
 - **Styling**: Tailwind CSS
-- **State Management**: TanStack Query (React Query)
-- **Routing**: React Router
+- **State Management**: TanStack Query (React Query) v5+
+- **Routing**: React Router v6+
 - **Charts & Visualizations**: Recharts, D3.js
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
+- **Database & Authentication**: Supabase
+- **Toast Notifications**: Sonner
+- **Form Handling**: React Hook Form, Zod
+- **Date Management**: date-fns, FullCalendar
+- **PDF Generation**: jsPDF, html2canvas
 
 ## 🌟 Key Features
 
 ### 📊 Interactive Dashboard
-- Real-time progress tracking
-- Personalized course recommendations
+- Real-time progress tracking with dynamic charts
+- Personalized course recommendations based on learning history
+- Daily/weekly learning streaks and XP system
+- Goals tracking and achievement monitoring
 - Upcoming events and deadlines
 
 ### 📚 Course Management
 - Diverse catalog of 20+ courses across various fields
 - Courses categorized by difficulty level (Beginner, Intermediate, Advanced)
 - Rich media integration (video, audio, quizzes)
-- Progress tracking and analytics
+- Interactive course player with progress saving
+- Detailed progress analytics and completion certificates
 
 ### 💬 Community & Forums
 - Threaded discussions with nested replies
-- Real-time chat integration
-- Study groups and collaborative learning
+- Real-time chat integration with mentors
+- Study groups and collaborative learning spaces
 - Ask an Expert feature for personalized guidance
 - Coding challenges and community events
 - Innovation corner for idea sharing
 - Community-driven open-source projects
 
 ### 🗺 Learning Paths
-- Personalized learning journeys
-- Skill assessments and adaptive learning
+- Personalized learning journeys based on career goals
+- Skill assessments and adaptive learning paths
+- Prerequisite course suggestions
 - Interactive roadmaps with D3.js visualizations
+- Path progress tracking and milestones
 
 ### 📅 Calendar & Scheduling
-- Event management and reminders
+- Event management and reminders for deadlines
 - Integration with external calendars
 - Scheduling tools for mentorship sessions
+- Time-blocking features for focused learning
 
 ### 🏆 Achievements & Gamification
-- Badges and certificates
+- Badges, certificates, and learning achievements
+- XP system with levels and ranks
 - Leaderboards and progress comparisons
 - Skill tree visualizations
+- Shareable certificates with verification system
 
-## 🔧 Setup & Installation
+### 👤 User Profiles & Settings
+- Customizable user profiles with learning statistics
+- Bio, occupation, and skill tracking
+- Course progress history
+- Social connections with other learners
+- Personalized notification preferences
 
-```bash
-# Clone the repository
-git clone https://github.com/your-repo/advanced-lms.git
-
-# Navigate to the project directory
-cd advanced-lms
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
+### 🔍 Certificate Verification
+- Secure, tamper-proof digital certificates
+- Public verification portal for employers
+- Blockchain-based certificate verification (coming soon)
+- Certificate sharing on social platforms
 
 ## 📁 Project Structure
 
 ```
-advanced-lms/
+edupro-lms/
 ├── src/
 │   ├── components/
-│   │   ├── ui/
-│   │   │   └── [shadcn/ui components]
-│   │   ├── Dashboard/
-│   │   ├── Courses/
-│   │   └── ...
+│   │   ├── ui/              # shadcn/ui components
+│   │   ├── dashboard/       # Dashboard components
+│   │   ├── courses/         # Course-related components
+│   │   ├── profile/         # Profile components
+│   │   ├── community/       # Community components
+│   │   └── achievements/    # Achievements components
 │   ├── pages/
 │   │   ├── Dashboard.tsx
 │   │   ├── Courses.tsx
+│   │   ├── LearningPaths.tsx
+│   │   ├── Profile.tsx
 │   │   ├── Community.tsx
 │   │   └── ...
-│   ├── hooks/
-│   ├── utils/
+│   ├── hooks/               # Custom React hooks
+│   ├── contexts/            # Context providers
+│   ├── utils/               # Utility functions
+│   ├── lib/                 # Library integrations
+│   ├── integrations/        # Third-party integrations
 │   └── App.tsx
-├── public/
+├── public/                  # Static assets
 └── [configuration files]
 ```
 
-## 🔄 Data Flow
+## 🔄 Data Flow Architecture
 
 ```mermaid
 graph TD
     A[User Interaction] --> B[React Components]
     B --> C[TanStack Query]
     C --> D[API Calls]
-    D --> E[Backend Services]
+    D --> E[Supabase Backend]
     E --> D
     D --> C
     C --> B
@@ -105,6 +121,8 @@ graph TD
 ```
 
 ## 🎨 Theme System
+
+Our theme system supports both light and dark modes with a premium color palette that ensures accessibility and visual appeal:
 
 ```mermaid
 flowchart LR
@@ -117,30 +135,12 @@ flowchart LR
     F --> G
 ```
 
-## 🔄 State Management Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Component
-    participant Q as Query Cache
-    participant A as API
-    
-    U->>C: Interaction
-    C->>Q: Check Cache
-    Q-->>C: Cache Hit/Miss
-    C->>A: API Request
-    A-->>C: Response
-    C->>Q: Update Cache
-    C->>U: UI Update
-```
-
 ## 🛡️ Authentication Flow
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant A as Auth Provider
+    participant A as Supabase Auth
     participant R as Router
     participant P as Protected Route
     
@@ -157,7 +157,7 @@ sequenceDiagram
 
 ```mermaid
 mindmap
-  root((LMS Platform))
+  root((EduPro Platform))
     Learning
       Courses
         Live Classes
@@ -185,41 +185,54 @@ mindmap
 ## 🔐 Security & Performance
 
 ### Security Measures
-- JWT-based authentication
+- JWT-based authentication with Supabase
+- Row-level security for data protection
 - Role-based access control
 - Input validation & sanitization
 - XSS & CSRF protection
+- Secure certificate verification
 
 ### Performance Optimizations
 - Code splitting & lazy loading
 - Image optimization
-- Caching strategies
-- Performance monitoring
+- Caching strategies with React Query
+- Virtualized lists for large data sets
+- Performance monitoring and analytics
 
-## 🎨 Theme Customization
+## 🎨 Premium UI/UX Features
 
-Our theme system supports both light and dark modes with a premium color palette:
+- Neumorphic design elements
+- Gradient accents and micro-interactions
+- Responsive design for all devices
+- Motion animations for improved user engagement
+- Dark/light mode with smooth transitions
+- Customizable UI themes
+- Accessibility-first approach (WCAG compliant)
+- Interactive charts and data visualizations
 
-### Light Mode
-```css
-:root {
-  --primary: hsl(262, 83%, 58%);
-  --secondary: hsl(240, 4.8%, 95.9%);
-  --accent: hsl(262, 83%, 58%);
-  --background: hsl(260, 85%, 98%);
-  --foreground: hsl(240, 10%, 3.9%);
-}
+## 🚀 Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/your-repo/edupro-lms.git
+
+# Navigate to the project directory
+cd edupro-lms
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
-### Dark Mode
-```css
-.dark {
-  --primary: hsl(262, 83%, 58%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --accent: hsl(262, 83%, 58%);
-  --background: hsl(240, 10%, 3.9%);
-  --foreground: hsl(0, 0%, 98%);
-}
+## 🌐 Environment Setup
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## 🤝 Contributing
@@ -241,6 +254,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Recharts](https://recharts.org/)
 - [D3.js](https://d3js.org/)
 - [Framer Motion](https://www.framer.com/motion/)
+- [Supabase](https://supabase.com/)
 
 ---
 

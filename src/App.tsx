@@ -21,6 +21,7 @@ import Community from "./pages/Community";
 import ResourceLibrary from "./pages/ResourceLibrary";
 import Achievements from "./pages/Achievements";
 import Landing from "./pages/Landing";
+import CertificateVerification from "./pages/CertificateVerification";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -80,6 +81,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/verify-certificate" element={<CertificateVerification />} />
                 <Route
                   path="/dashboard"
                   element={
@@ -102,6 +104,7 @@ const App = () => {
                   <Route path="profile" element={<Profile />} />
                   <Route path="settings" element={<Settings />} />
                 </Route>
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
           </AuthProvider>

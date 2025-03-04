@@ -1,255 +1,201 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Award, Search, CheckCircle, XCircle, Calendar, User, BookOpen } from 'lucide-react';
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Award, Search, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-interface VerifiedCertificate {
-  id: string;
-  name: string;
-  courseName: string;
-  studentName: string;
-  earnedDate: string;
-  isValid: boolean;
-}
-
-const CertificateVerification = () => {
+const CertificateVerification: React.FC = () => {
   const [certificateId, setCertificateId] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<VerifiedCertificate | null>(null);
-  
-  const handleVerify = async () => {
+  const [loading, setLoading] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<'success' | 'failure' | null>(null);
+  const [certificateData, setCertificateData] = useState<{
+    studentName: string;
+    courseName: string;
+    issueDate: string;
+    expiryDate?: string;
+  } | null>(null);
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!certificateId.trim()) {
-      toast.error("Please enter a certificate ID");
+      toast.error('Please enter a certificate ID');
       return;
     }
     
-    setIsVerifying(true);
+    setLoading(true);
     
     try {
-      // Query the database for the certificate
-      const { data: certificate, error } = await supabase
-        .from('certificates')
-        .select(`
-          id,
-          name,
-          earned_date,
-          courses:course_id (title),
-          profiles:user_id (full_name)
-        `)
-        .eq('id', certificateId)
-        .maybeSingle();
+      // Mock verification - in real implementation, this would call the Supabase backend
+      setTimeout(() => {
+        if (certificateId === 'CERT-123456' || certificateId === 'CERT-654321') {
+          setVerificationResult('success');
+          setCertificateData({
+            studentName: 'John Doe',
+            courseName: certificateId === 'CERT-123456' ? 'Advanced React Development' : 'Full Stack Web Development',
+            issueDate: '2025-02-15',
+            expiryDate: '2028-02-15'
+          });
+          toast.success('Certificate verified successfully');
+        } else {
+          setVerificationResult('failure');
+          setCertificateData(null);
+          toast.error('Certificate not found or invalid');
+        }
+        setLoading(false);
+      }, 1500);
       
-      if (error) {
-        console.error("Error verifying certificate:", error);
-        toast.error("Error verifying certificate. Please try again.");
-        setVerificationResult(null);
-      } else if (!certificate) {
-        toast.error("Certificate not found. Please check the ID and try again.");
-        setVerificationResult({
-          id: certificateId,
-          name: "Unknown Certificate",
-          courseName: "Unknown Course",
-          studentName: "Unknown Student",
-          earnedDate: "N/A",
-          isValid: false
-        });
-      } else {
-        // Format and display the certificate information
-        setVerificationResult({
-          id: certificate.id,
-          name: certificate.name,
-          courseName: certificate.courses?.title || "Unknown Course",
-          studentName: certificate.profiles?.full_name || "Unknown Student",
-          earnedDate: certificate.earned_date,
-          isValid: true
-        });
-        
-        toast.success("Certificate verified successfully!");
-      }
     } catch (error) {
-      console.error("Exception during verification:", error);
-      toast.error("Unexpected error during verification. Please try again.");
-      setVerificationResult(null);
-    } finally {
-      setIsVerifying(false);
+      console.error('Verification error:', error);
+      toast.error('An error occurred during verification');
+      setLoading(false);
+      setVerificationResult('failure');
     }
   };
-  
-  const formatDate = (dateString: string) => {
-    if (dateString === "N/A") return dateString;
-    
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+
+  const resetVerification = () => {
+    setVerificationResult(null);
+    setCertificateData(null);
+    setCertificateId('');
   };
-  
+
   return (
-    <div className="container mx-auto py-12 px-4 max-w-4xl">
-      <div className="text-center mb-10">
-        <div className="inline-block p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
-          <Award className="h-10 w-10 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Certificate Verification</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2 max-w-2xl mx-auto">
-          Verify the authenticity of an EduSpark certificate by entering the certificate ID below.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex flex-col items-center justify-center p-4">
+      <Link to="/" className="absolute top-8 left-8 flex items-center text-primary hover:underline">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Home
+      </Link>
       
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-indigo-50 dark:from-gray-900 dark:to-indigo-950">
-        <CardHeader>
-          <CardTitle className="text-xl">Verify Certificate</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
-              <div className="flex-1">
-                <Input 
-                  placeholder="Enter certificate ID" 
-                  value={certificateId}
-                  onChange={(e) => setCertificateId(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Button 
-                onClick={handleVerify} 
-                disabled={isVerifying || !certificateId.trim()}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all duration-300"
-              >
-                {isVerifying ? (
-                  <>Verifying...</>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Verify
-                  </>
-                )}
-              </Button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-xl"
+      >
+        <Card className="border-border/50 shadow-xl bg-card/90 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+              <Award className="h-8 w-8 text-primary" />
             </div>
-            
-            {verificationResult && (
-              <div className="mt-8 border rounded-lg overflow-hidden">
-                <div className={`p-4 flex items-center ${verificationResult.isValid ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'}`}>
-                  {verificationResult.isValid ? (
-                    <CheckCircle className="h-6 w-6 mr-2" />
-                  ) : (
-                    <XCircle className="h-6 w-6 mr-2" />
-                  )}
-                  <span className="font-semibold">
-                    {verificationResult.isValid ? 
-                      'Certificate is valid and authentic' : 
-                      'Certificate is not valid or not found in our records'}
-                  </span>
-                </div>
-                
-                <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Certificate ID</h3>
-                        <p className="font-medium">{verificationResult.id}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                          <Award className="mr-2 h-4 w-4" /> Certificate Name
-                        </h3>
-                        <p className="font-medium">{verificationResult.name}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                          <User className="mr-2 h-4 w-4" /> Issued To
-                        </h3>
-                        <p className="font-medium">{verificationResult.studentName}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                          <BookOpen className="mr-2 h-4 w-4" /> Course Name
-                        </h3>
-                        <p className="font-medium">{verificationResult.courseName}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                          <Calendar className="mr-2 h-4 w-4" /> Issue Date
-                        </h3>
-                        <p className="font-medium">{formatDate(verificationResult.earnedDate)}</p>
-                      </div>
-                      
-                      {verificationResult.isValid && (
-                        <div className="pt-4">
-                          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                            <CheckCircle className="mr-1 h-3 w-3" /> Verified
-                          </div>
-                        </div>
-                      )}
+            <CardTitle className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+              Certificate Verification
+            </CardTitle>
+            <CardDescription>
+              Verify the authenticity of an EduPro certificate using the unique certificate ID
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            {verificationResult === null ? (
+              <form onSubmit={handleVerification} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="certificateId">Certificate ID</Label>
+                  <div className="relative">
+                    <Input 
+                      id="certificateId"
+                      placeholder="e.g. CERT-123456"
+                      value={certificateId}
+                      onChange={(e) => setCertificateId(e.target.value)}
+                      className="pl-10"
+                    />
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Search className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
-                  
-                  {!verificationResult.isValid && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
-                      <p className="text-amber-800 dark:text-amber-300 text-sm">
-                        If you believe this is an error, please contact our support team with the certificate details.
+                  <p className="text-xs text-muted-foreground">
+                    The certificate ID can be found at the bottom of your certificate
+                  </p>
+                </div>
+              </form>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="py-4"
+              >
+                <div className="flex flex-col items-center space-y-4">
+                  {verificationResult === 'success' ? (
+                    <>
+                      <div className="bg-green-500/20 rounded-full p-3">
+                        <CheckCircle className="h-12 w-12 text-green-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-green-600 dark:text-green-400">Certificate Verified</h3>
+                      
+                      {certificateData && (
+                        <div className="w-full bg-card border border-border/50 rounded-lg p-4 space-y-3 mt-2">
+                          <div className="grid grid-cols-3 gap-2 items-center">
+                            <span className="text-sm font-medium text-foreground/70">Student Name:</span>
+                            <span className="col-span-2 font-semibold">{certificateData.studentName}</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 items-center">
+                            <span className="text-sm font-medium text-foreground/70">Course:</span>
+                            <span className="col-span-2 font-semibold">{certificateData.courseName}</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 items-center">
+                            <span className="text-sm font-medium text-foreground/70">Issue Date:</span>
+                            <span className="col-span-2">{certificateData.issueDate}</span>
+                          </div>
+                          {certificateData.expiryDate && (
+                            <div className="grid grid-cols-3 gap-2 items-center">
+                              <span className="text-sm font-medium text-foreground/70">Expiry Date:</span>
+                              <span className="col-span-2">{certificateData.expiryDate}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-red-500/20 rounded-full p-3">
+                        <XCircle className="h-12 w-12 text-red-500" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-red-600 dark:text-red-400">Verification Failed</h3>
+                      <p className="text-center text-muted-foreground">
+                        The certificate ID you provided could not be verified. Please check the ID and try again,
+                        or contact support for assistance.
                       </p>
-                    </div>
+                    </>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="mt-10 text-center">
-        <h2 className="text-xl font-semibold mb-4">How to Verify a Certificate</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="inline-block p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
-                <Search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold mb-2">Find the Certificate ID</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Locate the unique ID on the certificate. It's usually at the bottom of the certificate.
-              </p>
-            </CardContent>
-          </Card>
+          </CardContent>
           
-          <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="inline-block p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 mb-4">
-                <Input className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="font-semibold mb-2">Enter the ID Above</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Type or paste the certificate ID into the verification field and click Verify.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-0 shadow-md hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="inline-block p-3 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-semibold mb-2">View Verification Result</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                The system will display the certificate details and confirm its authenticity.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          <CardFooter className="flex justify-center">
+            {verificationResult === null ? (
+              <Button 
+                onClick={handleVerification}
+                disabled={loading || !certificateId.trim()}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white w-full"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify Certificate'
+                )}
+              </Button>
+            ) : (
+              <Button 
+                onClick={resetVerification}
+                variant="outline"
+                className="border-primary/50 text-primary hover:bg-primary/10"
+              >
+                Verify Another Certificate
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 };

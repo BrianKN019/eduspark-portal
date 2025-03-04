@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
@@ -27,12 +28,16 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     const setupStorage = async () => {
-      const { data, error } = await supabase.storage.getBucket('avatars');
-      if (error && error.message.includes('does not exist')) {
-        await supabase.storage.createBucket('avatars', {
-          public: true,
-          fileSizeLimit: 1024 * 1024 * 2
-        });
+      try {
+        const { data, error } = await supabase.storage.getBucket('avatars');
+        if (error && error.message.includes('does not exist')) {
+          await supabase.storage.createBucket('avatars', {
+            public: true,
+            fileSizeLimit: 1024 * 1024 * 2
+          });
+        }
+      } catch (err) {
+        console.error('Error setting up storage:', err);
       }
     };
     

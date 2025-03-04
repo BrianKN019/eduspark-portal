@@ -3,7 +3,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Check, Star, Users, Award, BookOpen, Zap, ArrowRight, Code, Globe, Lock } from 'lucide-react';
+import { 
+  ChevronRight, Check, Star, Users, Award, BookOpen, Zap, 
+  ArrowRight, Code, Globe, Lock, Map, TrendingUp, Play,
+  Certificate, Search, ShieldCheck
+} from 'lucide-react';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +43,7 @@ const Landing: React.FC = () => {
             <a href="#features" className="text-foreground/80 hover:text-primary transition-colors">Features</a>
             <a href="#testimonials" className="text-foreground/80 hover:text-primary transition-colors">Testimonials</a>
             <a href="#pricing" className="text-foreground/80 hover:text-primary transition-colors">Pricing</a>
+            <a href="#certificates" className="text-foreground/80 hover:text-primary transition-colors">Certificates</a>
             <a href="#faq" className="text-foreground/80 hover:text-primary transition-colors">FAQ</a>
           </div>
           
@@ -72,7 +77,7 @@ const Landing: React.FC = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6">
               #1 Learning Platform for Professionals
             </span>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 gradient-text leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600 leading-tight">
               Accelerate Your Career With Expert-Led Courses
             </h1>
             <p className="text-xl text-foreground/80 mb-10 max-w-2xl mx-auto">
@@ -95,7 +100,7 @@ const Landing: React.FC = () => {
                 Watch Demo
               </Button>
             </div>
-            <div className="flex items-center justify-center gap-6 text-foreground/60">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-foreground/60">
               <div className="flex items-center">
                 <Users className="h-5 w-5 mr-2" />
                 <span>10,000+ Learners</span>
@@ -112,16 +117,25 @@ const Landing: React.FC = () => {
           </motion.div>
           
           <motion.div 
-            className="mt-16 max-w-5xl mx-auto rounded-xl overflow-hidden shadow-2xl shadow-primary/20"
+            className="mt-16 max-w-5xl mx-auto rounded-xl overflow-hidden shadow-2xl shadow-primary/20 relative border border-purple-500/30 group"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <img 
-              src="https://placehold.co/1200x600/5046e5/white?text=EduPro+Dashboard+Preview" 
-              alt="Platform Dashboard" 
-              className="w-full h-auto object-cover"
-            />
+            {/* Animated border effect */}
+            <div className="absolute inset-0 z-0 bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+            
+            <div className="absolute inset-0 z-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 animate-border-flow"></div>
+            
+            <div className="relative z-10 w-full h-full p-0.5">
+              <div className="bg-background/90 w-full h-full rounded-xl overflow-hidden">
+                <img 
+                  src="/lovable-uploads/d93226ad-8145-47e0-ac2d-5f76e44283fc.png" 
+                  alt="EduPro Dashboard Preview" 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -139,7 +153,7 @@ const Landing: React.FC = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
               Why Choose Us
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
               Premium Learning Experience
             </h2>
             <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
@@ -240,7 +254,7 @@ const Landing: React.FC = () => {
             <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
               Student Success Stories
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
               What Our Students Say
             </h2>
             <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
@@ -290,6 +304,136 @@ const Landing: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Certificate Verification Section */}
+      <section id="certificates" className="py-20 bg-gradient-to-r from-purple-900/10 to-blue-900/10">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+              Trust & Verification
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+              Verified Digital Certificates
+            </h2>
+            <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
+              Our certificates are secure, verifiable, and recognized by employers worldwide.
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="order-2 lg:order-1"
+            >
+              <div className="space-y-6">
+                <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-6 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <ShieldCheck className="h-6 w-6 text-green-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">Secure & Tamper-Proof</h3>
+                      <p className="text-foreground/70">
+                        Our certificates use advanced encryption technology to ensure they cannot be forged or tampered with.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-6 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Globe className="h-6 w-6 text-blue-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">Globally Recognized</h3>
+                      <p className="text-foreground/70">
+                        Our certificates are recognized by leading employers and educational institutions worldwide.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-xl p-6 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <Search className="h-6 w-6 text-purple-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">Instantly Verifiable</h3>
+                      <p className="text-foreground/70">
+                        Employers can instantly verify the authenticity of certificates using our online verification system.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="order-1 lg:order-2"
+            >
+              <div className="bg-card/70 backdrop-blur-sm border border-border/50 rounded-xl overflow-hidden shadow-xl relative">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-b from-purple-600/20 to-transparent rounded-full transform translate-x-16 -translate-y-16 blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-t from-blue-600/20 to-transparent rounded-full transform -translate-x-16 translate-y-16 blur-3xl"></div>
+                
+                <div className="p-8 relative z-10">
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                      <Certificate className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-center mb-6">Verify a Certificate</h3>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="bg-background/50 border border-border/50 rounded-lg p-6">
+                      <img 
+                        src="https://placehold.co/400x250/5046e5/white?text=Certificate+Preview" 
+                        alt="Certificate Preview" 
+                        className="w-full h-auto rounded-md mb-4"
+                      />
+                      <div className="text-center">
+                        <p className="text-sm text-foreground/70">
+                          Enter your certificate ID to verify its authenticity
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => navigate('/verify-certificate')}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                    size="lg"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    Verify Certificate
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -491,6 +635,32 @@ const Landing: React.FC = () => {
           </div>
         </div>
       </footer>
+      
+      <style jsx>{`
+        @keyframes borderFlow {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        
+        .animate-border-flow {
+          animation: borderFlow 8s ease infinite;
+          background-size: 300% 300%;
+          padding: 2px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .group:hover .animate-border-flow {
+          opacity: 1;
+        }
+      `}</style>
     </div>
   );
 };
