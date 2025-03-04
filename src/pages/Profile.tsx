@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
@@ -27,14 +26,12 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Create storage bucket for avatars if it doesn't exist
     const setupStorage = async () => {
       const { data, error } = await supabase.storage.getBucket('avatars');
       if (error && error.message.includes('does not exist')) {
-        // Bucket doesn't exist, create it
         await supabase.storage.createBucket('avatars', {
           public: true,
-          fileSizeLimit: 1024 * 1024 * 2 // 2MB
+          fileSizeLimit: 1024 * 1024 * 2
         });
       }
     };
@@ -50,7 +47,6 @@ const Profile: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        // Fetch profile data
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
@@ -70,7 +66,7 @@ const Profile: React.FC = () => {
           occupation: profile?.occupation || '',
           bio: profile?.bio || '',
           avatar_url: profile?.avatar_url || '',
-          courses: userProfile.courses, // Keep existing courses
+          courses: userProfile.courses,
         });
       }
     } catch (error) {
@@ -111,7 +107,6 @@ const Profile: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
       
-      // Update the profile
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -122,8 +117,6 @@ const Profile: React.FC = () => {
           occupation: userProfile.occupation,
           bio: userProfile.bio,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'id'
         });
       
       if (error) throw error;
@@ -131,7 +124,6 @@ const Profile: React.FC = () => {
       toast.success('Profile updated successfully');
       setIsEditing(false);
       
-      // Refresh the profile data
       fetchUserProfile();
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -154,7 +146,7 @@ const Profile: React.FC = () => {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    fetchUserProfile(); // Reset form to original values
+    fetchUserProfile();
   };
 
   return (

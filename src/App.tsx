@@ -20,6 +20,7 @@ import LearningPaths from "./pages/LearningPaths";
 import Community from "./pages/Community";
 import ResourceLibrary from "./pages/ResourceLibrary";
 import Achievements from "./pages/Achievements";
+import Landing from "./pages/Landing";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -77,9 +78,10 @@ const App = () => {
             <Toaster position="top-right" richColors />
             <BrowserRouter>
               <Routes>
+                <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route
-                  path="/"
+                  path="/dashboard"
                   element={
                     <ProtectedRoute>
                       <Layout toggleTheme={toggleTheme} theme={theme} />
