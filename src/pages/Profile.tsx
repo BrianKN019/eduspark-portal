@@ -30,7 +30,7 @@ const Profile: React.FC = () => {
     // Create storage bucket for avatars if it doesn't exist
     const setupStorage = async () => {
       const { data, error } = await supabase.storage.getBucket('avatars');
-      if (error && error.code === 'PGRST116') {
+      if (error && error.message.includes('does not exist')) {
         // Bucket doesn't exist, create it
         await supabase.storage.createBucket('avatars', {
           public: true,
