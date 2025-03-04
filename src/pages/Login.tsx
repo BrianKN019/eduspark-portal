@@ -15,6 +15,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -61,6 +62,11 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Toggle between login and register tabs
+  const toggleTab = (tab: string) => {
+    setActiveTab(tab);
   };
 
   return (
@@ -146,7 +152,7 @@ const Login = () => {
           className="lg:w-1/2 flex items-center justify-center p-8 lg:p-12"
         >
           <Card className="w-full max-w-md mx-auto border-border/50 shadow-xl bg-card/90 backdrop-blur-sm">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={toggleTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <LogIn className="h-4 w-4 mr-2" /> Log In
@@ -215,7 +221,10 @@ const Login = () => {
                     </Button>
                     <p className="mt-4 text-center text-sm text-muted-foreground">
                       Don't have an account? 
-                      <span className="text-primary hover:underline cursor-pointer ml-1" onClick={() => document.querySelector('[data-state="inactive"][value="register"]')?.click()}>
+                      <span 
+                        className="text-primary hover:underline cursor-pointer ml-1" 
+                        onClick={() => toggleTab("register")}
+                      >
                         Sign up
                       </span>
                     </p>
@@ -294,7 +303,10 @@ const Login = () => {
                     </Button>
                     <p className="mt-4 text-center text-sm text-muted-foreground">
                       Already have an account? 
-                      <span className="text-primary hover:underline cursor-pointer ml-1" onClick={() => document.querySelector('[data-state="inactive"][value="login"]')?.click()}>
+                      <span 
+                        className="text-primary hover:underline cursor-pointer ml-1" 
+                        onClick={() => toggleTab("login")}
+                      >
                         Log in
                       </span>
                     </p>
