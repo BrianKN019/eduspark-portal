@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Home, 
   BookOpen, 
@@ -31,7 +31,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Sidebar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState('/');
+  const [activeItem, setActiveItem] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,21 +47,22 @@ const Sidebar: React.FC = () => {
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
-    setActiveItem(window.location.pathname);
-  }, [window.location.pathname]);
+    setActiveItem(location.pathname);
+  }, [location.pathname]);
 
   const navigationItems = [
-    { name: "Dashboard", href: "/", icon: Home },
-    { name: "Courses", href: "/courses", icon: BookOpen },
-    { name: "Live Classes", href: "/live-classes", icon: Video },
-    { name: "Learning Paths", href: "/learning-paths", icon: GitBranch },
-    { name: "Analytics", href: "/analytics", icon: BarChart3 },
-    { name: "Calendar", href: "/calendar", icon: CalendarDays },
-    { name: "Discussions", href: "/discussions", icon: MessageSquare },
-    { name: "Community", href: "/community", icon: Users },
-    { name: "Resource Library", href: "/resource-library", icon: Library },
-    { name: "Achievements", href: "/achievements", icon: Award },
-    { name: "Profile", href: "/profile", icon: User },
+    { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Courses", href: "/dashboard/courses", icon: BookOpen },
+    { name: "Live Classes", href: "/dashboard/live-classes", icon: Video },
+    { name: "Learning Paths", href: "/dashboard/learning-paths", icon: GitBranch },
+    { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+    { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
+    { name: "Discussions", href: "/dashboard/discussions", icon: MessageSquare },
+    { name: "Community", href: "/dashboard/community", icon: Users },
+    { name: "Resource Library", href: "/dashboard/resource-library", icon: Library },
+    { name: "Achievements", href: "/dashboard/achievements", icon: Award },
+    { name: "Profile", href: "/dashboard/profile", icon: User },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
   const toggleMobileMenu = () => {
