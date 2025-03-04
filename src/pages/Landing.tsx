@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, Check, Star, Users, Award, BookOpen, Zap, 
   ArrowRight, Code, Globe, Lock, Map, TrendingUp, Play,
-  Certificate, Search, ShieldCheck
+  Search, ShieldCheck
 } from 'lucide-react';
 
 const Landing: React.FC = () => {
@@ -402,7 +402,7 @@ const Landing: React.FC = () => {
                 <div className="p-8 relative z-10">
                   <div className="flex items-center justify-center mb-6">
                     <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-                      <Certificate className="h-8 w-8 text-white" />
+                      <Award className="h-8 w-8 text-white" />
                     </div>
                   </div>
                   
@@ -636,7 +636,8 @@ const Landing: React.FC = () => {
         </div>
       </footer>
       
-      <style jsx>{`
+      <style>
+        {`
         @keyframes borderFlow {
           0% {
             background-position: 0% 50%;
@@ -660,7 +661,8 @@ const Landing: React.FC = () => {
         .group:hover .animate-border-flow {
           opacity: 1;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
