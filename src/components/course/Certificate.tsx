@@ -1,7 +1,8 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, Download, Share2, Check } from 'lucide-react';
+import { Award, Download, Share2, CheckCircle } from 'lucide-react';
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -74,7 +75,7 @@ const Certificate: React.FC<CertificateProps> = ({
       const canvas = await html2canvas(certificateElement, {
         scale: 4, // Higher resolution for better quality
         logging: false,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#0a101f', // Dark background color to match the design
         useCORS: true,
         allowTaint: true,
         windowWidth: certificateElement.scrollWidth,
@@ -88,7 +89,7 @@ const Certificate: React.FC<CertificateProps> = ({
       
       // Create PDF with proper sizing for single page fit
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
         compress: true
@@ -146,7 +147,7 @@ const Certificate: React.FC<CertificateProps> = ({
       // For sharing, we need a file or URL, so create a temporary image first
       const canvas = await html2canvas(certificateRef.current, {
         scale: 2,
-        backgroundColor: null,
+        backgroundColor: '#0a101f', // Dark background color to match the design
         useCORS: true
       });
       
@@ -201,80 +202,78 @@ const Certificate: React.FC<CertificateProps> = ({
   
   return (
     <div className="space-y-6">
-      <Card className="border-0 shadow-xl overflow-hidden">
+      <Card className="border-0 shadow-xl overflow-hidden bg-[#0a101f]">
         <CardContent className="p-6">
-          <div className="flex flex-col items-center space-y-4 mb-6">
+          <div className="flex flex-col items-center space-y-4 mb-6 text-white">
             <div className="relative">
               <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md opacity-30 animate-pulse"></div>
-              <Award className="h-16 w-16 text-yellow-500 relative z-10" />
+              <Award className="h-16 w-16 text-yellow-400 relative z-10" />
             </div>
-            <h2 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
+            <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">
               Congratulations on completing the course!
             </h2>
-            <p className="text-center text-gray-600 dark:text-gray-300">
+            <p className="text-center text-gray-300">
               You've earned this certificate of completion. Download it to showcase your achievement.
             </p>
           </div>
           
           <div 
             ref={certificateRef}
-            className="certificate-container border-8 border-double border-yellow-200 dark:border-yellow-700 p-8 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg"
+            className="certificate-container relative border-4 border-yellow-500/50 rounded-lg mb-6 bg-[#0a101f] overflow-hidden"
           >
-            <div className="text-center space-y-6 relative">
-              {/* Premium border design */}
-              <div className="absolute inset-0 border-4 border-double border-yellow-300 dark:border-yellow-600 m-4 rounded-lg pointer-events-none"></div>
-              
+            {/* Golden border around certificate */}
+            <div className="absolute inset-0 border-8 border-yellow-500/50 pointer-events-none"></div>
+            
+            <div className="p-8 flex flex-col items-center text-white">
               {/* Certificate header with gold emblem */}
-              <div className="flex justify-center">
-                <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 p-4 rounded-full">
-                  <Award className="h-20 w-20 text-white" />
-                </div>
+              <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-4">
+                <Award className="h-10 w-10 text-[#0a101f]" />
               </div>
               
+              {/* Certificate title */}
+              <h1 className="text-3xl font-bold text-yellow-500 mb-8 text-center">CERTIFICATE OF COMPLETION</h1>
+              
               {/* Certificate content */}
-              <div className="px-8 py-6">
-                <h1 className="text-3xl font-serif font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-yellow-800 dark:from-yellow-400 dark:to-yellow-600">CERTIFICATE OF COMPLETION</h1>
-                <p className="text-gray-600 dark:text-gray-300">This certifies that</p>
-                <h2 className="text-2xl font-bold my-3 font-serif">{studentName}</h2>
-                <p className="text-gray-600 dark:text-gray-300">has successfully completed</p>
-                <h3 className="text-2xl font-bold my-3 font-serif">{courseName}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">on {formatDate(completionDate || new Date().toISOString())}</p>
+              <div className="text-center space-y-3 w-full">
+                <p className="text-gray-300">This certifies that</p>
+                <h2 className="text-3xl font-bold text-white my-3">{studentName.toUpperCase()}</h2>
+                <p className="text-gray-300">has successfully completed</p>
+                <h3 className="text-2xl font-bold text-white my-3">{courseName}</h3>
+                <p className="text-gray-300 mb-8">on {formatDate(completionDate || new Date().toISOString())}</p>
                 
                 {/* Signature and stamp section */}
-                <div className="flex justify-around items-center mt-8">
+                <div className="flex justify-around items-center mt-8 w-full">
                   <div className="text-center">
                     <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
-                      <div className="font-signature text-lg text-gray-700 dark:text-gray-300 transform -rotate-2">Jane Smith</div>
+                      <div className="font-normal text-white">Jane Smith</div>
                     </div>
-                    <p className="font-bold">Course Director</p>
+                    <p className="text-sm text-gray-300">Course Director</p>
                   </div>
-                  <div className="flex items-center justify-center w-24 h-24 border-2 border-dashed border-yellow-600 dark:border-yellow-500 rounded-full">
-                    <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full">
-                      <Check className="h-10 w-10 text-white" />
-                    </div>
+                  <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-dashed border-yellow-300">
+                    <CheckCircle className="h-8 w-8 text-[#0a101f]" />
                   </div>
                   <div className="text-center">
                     <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
-                      <div className="font-signature text-lg text-gray-700 dark:text-gray-300 transform rotate-1">John Doe</div>
+                      <div className="font-normal text-white">John Doe</div>
                     </div>
-                    <p className="font-bold">EduSpark Director</p>
+                    <p className="text-sm text-gray-300">EduSpark Director</p>
                   </div>
                 </div>
               </div>
               
               {/* Certificate footer with verification */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-around">
+              <div className="w-full mt-12 pt-4 border-t border-gray-700 flex justify-around text-sm text-gray-400">
                 <div className="text-center">
-                  <p className="font-bold">Course ID</p>
-                  <p className="text-sm text-gray-500">{courseId.slice(0, 8)}</p>
+                  <p>Course ID</p>
+                  <p>{courseId.slice(0, 8)}</p>
                 </div>
                 <div className="text-center">
-                  <p className="font-bold">EduSpark LMS</p>
-                  <p className="text-sm text-gray-500">Official Certificate</p>
+                  <p>EduSpark LMS</p>
+                  <p>Official Certificate</p>
                 </div>
                 <div className="text-center">
-                  <p className="font-bold">Date Issued</p>
-                  <p className="text-sm text-gray-500">{new Date().toLocaleDateString()}</p>
+                  <p>Date Issued</p>
+                  <p>{new Date().toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
@@ -284,7 +283,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 shadow-md hover:shadow-lg transition-all duration-300"
+              className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               {isDownloading ? (
                 <>Downloading...</>
@@ -297,7 +296,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               variant="outline"
               onClick={handleShare}
-              className="border-yellow-400 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 shadow-md hover:shadow-lg transition-all duration-300"
+              className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 shadow-md hover:shadow-lg transition-all duration-300"
             >
               <Share2 className="mr-2 h-4 w-4" /> Share Achievement
             </Button>

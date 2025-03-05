@@ -44,6 +44,8 @@ serve(async (req) => {
       You're creating content for Step ${stepNumber}: ${currentStep} in a structured 6-step learning approach.
       Your content should be comprehensive, effective, and engaging for students.
       Format your output in clean markdown with proper headings, lists, and code blocks where appropriate.
+      Use realistic examples and practical applications wherever possible.
+      Include visual descriptions where appropriate to enhance learning.
     `;
     
     let userPrompt = "";
@@ -52,7 +54,7 @@ serve(async (req) => {
       // If a custom prompt is provided, use it
       userPrompt = customPrompt;
     } else {
-      // Create a general course outline template
+      // Create a more detailed course outline template
       const courseLearningTemplate = `
       # ${title} - ${level} Level Course
       
@@ -97,6 +99,8 @@ serve(async (req) => {
           4. CONCLUSION (summary and next steps)
           
           Make the content engaging, visual, and suitable for a 10-15 minute educational video.
+          Include real-world examples and applications specific to ${field} that students can relate to.
+          Ensure the material is technically accurate and up-to-date.
         `;
       } else if (lessonType === 'text') {
         userPrompt = `
@@ -113,6 +117,9 @@ serve(async (req) => {
           - Real-world examples and applications
           
           The content should be comprehensive but easy to read and understand.
+          Cover all necessary theoretical foundations while focusing on practical applications.
+          Include analogies or comparisons that help clarify complex concepts.
+          Address common misconceptions or challenges that students typically face.
         `;
       } else if (lessonType === 'code') {
         userPrompt = `
@@ -128,6 +135,10 @@ serve(async (req) => {
           - Exercises for the student to try
           
           Make sure all code is correct, well-commented, and follows best practices.
+          Include edge cases and error handling where appropriate.
+          Show both the "simple way" and the "best practice way" when relevant.
+          Explain the reasoning behind coding decisions, not just how to write the code.
+          For ${field}, focus particularly on industry-standard approaches and tools.
         `;
       } else if (lessonType === 'exercise') {
         userPrompt = `
@@ -144,6 +155,10 @@ serve(async (req) => {
           - Solution (in a collapsed section if possible)
           
           Make the exercises progressive in difficulty and relevant to real-world applications.
+          Include a mix of guided practice and open-ended challenges.
+          Design exercises that reinforce the key learning outcomes.
+          For each exercise, explain what skills or concepts it is meant to develop.
+          Make sure the exercises are appropriate for the ${level} level in ${field}.
         `;
       } else {
         userPrompt = `
@@ -159,6 +174,10 @@ serve(async (req) => {
           - Next steps in the learning journey
           
           Make this conclusion tie together all the key points and provide a clear path forward.
+          Emphasize practical applications and how the knowledge can be applied.
+          Include motivational elements that encourage continuing the learning journey.
+          Suggest specific next steps or additional resources to explore.
+          Connect this module to upcoming modules or broader ${field} concepts.
         `;
       }
     }
@@ -171,13 +190,13 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 3500,
+        max_tokens: 4000,
       }),
     });
 

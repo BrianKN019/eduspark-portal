@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { courseName, field, level, difficulty, questionCount = 5 } = await req.json();
+    const { courseName, field, level, difficulty, questionCount = 10 } = await req.json();
     
     if (!openAIApiKey) {
       console.log("OpenAI API key not found, using static assessment");
@@ -36,13 +36,14 @@ serve(async (req) => {
       Create a comprehensive ${difficulty} level assessment for a ${level} course on ${field} titled "${courseName}".
       
       Follow these guidelines:
-      1. Generate ${questionCount} challenging multiple-choice questions with 4 options each
+      1. Generate exactly ${questionCount} challenging multiple-choice questions with 4 options each
       2. For each question, provide a clear question text that tests conceptual understanding
       3. Make options realistic and non-obvious - avoid very clear wrong answers
       4. Include practical scenario questions where appropriate
       5. For coding-related topics, include code interpretation questions
       6. Indicate which option (0-3) is correct for each question
-      7. Add a brief explanation for why each correct answer is right (to be shown after answering)
+      7. Add a brief but thorough explanation for why each correct answer is right (to be shown after answering)
+      8. Provide varied difficulty levels within the assessment to test different skills
       
       Format the response as a valid JSON object with this structure:
       {
@@ -70,16 +71,16 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational assessment creator specializing in creating challenging, fair, and educational multiple-choice questions. Your assessments should be appropriate for the specified difficulty level and subject area.' 
+            content: 'You are an expert educational assessment creator specializing in creating challenging, fair, and educational multiple-choice questions. Your assessments should be appropriate for the specified difficulty level and subject area, and should provide valuable learning experiences for students.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 4000,
       }),
     });
 
