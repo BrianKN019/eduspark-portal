@@ -19,6 +19,7 @@ serve(async (req) => {
     const { courseName, field, level, difficulty, questionCount = 5 } = await req.json();
     
     if (!openAIApiKey) {
+      console.log("OpenAI API key not found, using static assessment");
       // Return static assessment if OpenAI API key is not available
       return new Response(
         JSON.stringify({ 
@@ -28,29 +29,40 @@ serve(async (req) => {
       );
     }
 
-    // Create prompt for OpenAI
+    console.log(`Generating ${difficulty} assessment for ${courseName} (${field}, ${level})`);
+
+    // Create improved prompt for OpenAI
     const prompt = `
-      Create a ${difficulty} level assessment for a ${level} course on ${field} titled "${courseName}".
-      Generate ${questionCount} multiple-choice questions with 4 options each.
-      For each question, indicate which option (0-3) is correct.
+      Create a comprehensive ${difficulty} level assessment for a ${level} course on ${field} titled "${courseName}".
+      
+      Follow these guidelines:
+      1. Generate ${questionCount} challenging multiple-choice questions with 4 options each
+      2. For each question, provide a clear question text that tests conceptual understanding
+      3. Make options realistic and non-obvious - avoid very clear wrong answers
+      4. Include practical scenario questions where appropriate
+      5. For coding-related topics, include code interpretation questions
+      6. Indicate which option (0-3) is correct for each question
+      7. Add a brief explanation for why each correct answer is right (to be shown after answering)
+      
       Format the response as a valid JSON object with this structure:
       {
         "title": "${courseName} Assessment",
-        "description": "Test your knowledge of ${field} concepts at the ${difficulty} level.",
+        "description": "Comprehensive ${difficulty} level assessment to test your knowledge of ${field} concepts.",
         "difficulty": "${difficulty}",
         "questions": [
           {
             "id": 1,
             "text": "Question text goes here",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctAnswer": 0
+            "correctAnswer": 0,
+            "explanation": "Brief explanation of why this answer is correct"
           },
           ...
         ]
       }
     `;
 
-    // Call OpenAI API
+    // Call OpenAI API with improved parameters
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -62,34 +74,38 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are an educational assessment generator. Create challenging but fair multiple-choice questions with one clear correct answer.' 
+            content: 'You are an expert educational assessment creator specializing in creating challenging, fair, and educational multiple-choice questions. Your assessments should be appropriate for the specified difficulty level and subject area.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
+        max_tokens: 3000,
       }),
     });
 
     const data = await response.json();
     
     if (!data.choices || !data.choices[0]) {
+      console.error('Invalid response from OpenAI API:', data);
       throw new Error('Invalid response from OpenAI API');
     }
     
     const generatedText = data.choices[0].message.content;
+    console.log("Generated assessment successfully");
     
     // Parse the JSON response from OpenAI
     try {
       // Extract the JSON object from the response
       const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('No valid JSON found in response');
         throw new Error('No valid JSON found in response');
       }
       
       const assessmentData = JSON.parse(jsonMatch[0]);
       
       // Add an ID to the assessment
-      assessmentData.id = `ai-assessment-${courseName.replace(/\s+/g, '-').toLowerCase()}-${difficulty}`;
+      assessmentData.id = `ai-assessment-${courseName.replace(/\s+/g, '-').toLowerCase()}-${difficulty}-${Date.now()}`;
       
       return new Response(
         JSON.stringify({ assessment: assessmentData }),
@@ -100,7 +116,8 @@ serve(async (req) => {
       // Fall back to static assessment if parsing fails
       return new Response(
         JSON.stringify({ 
-          assessment: generateStaticAssessment(courseName, field, difficulty, questionCount)
+          assessment: generateStaticAssessment(courseName, field, difficulty, questionCount),
+          error: 'Failed to parse AI-generated assessment'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -131,7 +148,8 @@ function generateStaticAssessment(courseName: string, field: string, difficulty:
       `Option C for question ${index + 1}`,
       `Option D for question ${index + 1}`
     ],
-    correctAnswer: Math.floor(Math.random() * 4) // Random correct answer
+    correctAnswer: Math.floor(Math.random() * 4), // Random correct answer
+    explanation: `This is the explanation for question ${index + 1}`
   }));
   
   return {

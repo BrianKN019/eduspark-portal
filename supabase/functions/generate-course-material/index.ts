@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -23,8 +24,28 @@ serve(async (req) => {
       throw new Error('Missing OpenAI API key');
     }
 
+    // Define the 6-step learning approach
+    const sixStepLearning = [
+      "Knowledge Assessment",
+      "Learning Path Design",
+      "Resource Curation",
+      "Practice Framework",
+      "Progress Tracking System",
+      "Study Schedule Suggestion"
+    ];
+
+    // Get the appropriate step for this lesson
+    const stepNumber = lessonIndex < sixStepLearning.length ? lessonIndex + 1 : 1;
+    const currentStep = sixStepLearning[lessonIndex % sixStepLearning.length];
+
     // Construct the prompt based on course info and lesson type
-    let systemPrompt = `You are an expert course creator for ${field} at the ${level} level. Follow a structured 6-step learning approach for all content creation to ensure comprehensive, effective learning.`;
+    let systemPrompt = `
+      You are an expert course creator for ${field} at the ${level} level.
+      You're creating content for Step ${stepNumber}: ${currentStep} in a structured 6-step learning approach.
+      Your content should be comprehensive, effective, and engaging for students.
+      Format your output in clean markdown with proper headings, lists, and code blocks where appropriate.
+    `;
+    
     let userPrompt = "";
     
     if (customPrompt) {
@@ -35,80 +56,114 @@ serve(async (req) => {
       const courseLearningTemplate = `
       # ${title} - ${level} Level Course
       
-      ## Step 1: Knowledge Assessment
-      1. Break down ${title} into core components
-      2. Evaluate complexity levels of each component
-      3. Map prerequisites and dependencies
-      4. Identify foundational concepts
+      ## Step ${stepNumber}: ${currentStep}
       
-      ## Step 2: Learning Path Design
-      1. Create progression milestones based on ${level} level
-      2. Structure topics in optimal learning sequence
-      3. Estimate time requirements per topic
-      4. Align with typical learning constraints
+      ### Overview
+      - What this step covers and why it's important for ${field}
+      - How this fits into the overall learning journey
+      - What students will be able to do after this section
       
-      ## Step 3: Resource Curation
-      1. Identify learning materials matching different learning styles:
-         - Video resources
-         - Reading materials
-         - Interactive exercises
-         - Practice projects
-      2. Rank resources by effectiveness
-      3. Create resource playlist
+      ### Core Concepts
+      1. First key concept in ${currentStep}
+      2. Second key concept
+      3. Third key concept
       
-      ## Step 4: Practice Framework
-      1. Design exercises for each topic
-      2. Create real-world application scenarios
-      3. Develop progress checkpoints
-      4. Structure review intervals
+      ### Detailed Exploration
+      [Detailed content goes here]
       
-      ## Step 5: Progress Tracking System
-      1. Define measurable progress indicators
-      2. Create assessment criteria
-      3. Design feedback loops
-      4. Establish milestone completion metrics
+      ### Practical Application
+      [Exercises and examples go here]
       
-      ## Step 6: Study Schedule Suggestion
-      1. Break down learning into manageable tasks
-      2. Incorporate rest and review periods
-      3. Add checkpoint assessments
-      4. Balance theory and practice
+      ### Key Takeaways
+      - Main point 1
+      - Main point 2
+      - Main point 3
+      
+      ### Next Steps
+      What comes next in the learning journey
       `;
 
-      // Otherwise use default prompts based on lesson type
+      // Content type-specific prompts based on lesson type
       if (lessonType === 'video') {
-        userPrompt = `Write a comprehensive script for a video introduction lesson about "${title}" at a ${level} level. 
-        
-        ${courseLearningTemplate}
-        
-        Format your response in markdown with clear sections, and focus on what would be said in the video.`;
+        userPrompt = `
+          Create a comprehensive video script introducing "${title}" at a ${level} level, focusing on Step ${stepNumber}: ${currentStep}.
+          
+          ${courseLearningTemplate}
+          
+          Format your response in markdown with clear sections for:
+          1. INTRODUCTION (hook, overview of what will be covered)
+          2. MAIN CONTENT (divided into logical sections with clear explanations)
+          3. VISUALS (descriptions of what should be shown on screen at key points)
+          4. CONCLUSION (summary and next steps)
+          
+          Make the content engaging, visual, and suitable for a 10-15 minute educational video.
+        `;
       } else if (lessonType === 'text') {
-        userPrompt = `Create detailed educational text content about "${title}" at a ${level} level. 
-        
-        ${courseLearningTemplate}
-        
-        Include explanations, examples, and key concepts. Format it in markdown with clear sections and bullet points where appropriate.`;
+        userPrompt = `
+          Create detailed educational text content about "${title}" at a ${level} level, focusing on Step ${stepNumber}: ${currentStep}.
+          
+          ${courseLearningTemplate}
+          
+          Format your response in markdown with:
+          - Clear headings and subheadings
+          - Concise paragraphs explaining key concepts
+          - Bullet points for lists of important information
+          - Bold text for key terms and definitions
+          - Code blocks for any technical examples
+          - Real-world examples and applications
+          
+          The content should be comprehensive but easy to read and understand.
+        `;
       } else if (lessonType === 'code') {
-        userPrompt = `Provide practical code examples and explanations for "${title}" at a ${level} level. 
-        
-        ${courseLearningTemplate}
-        
-        Include comments explaining what each part does. For non-programming subjects, provide practical frameworks, templates or models instead. Format in markdown with code blocks.`;
+        userPrompt = `
+          Provide practical code examples and explanations for "${title}" at a ${level} level, focusing on Step ${stepNumber}: ${currentStep}.
+          
+          ${courseLearningTemplate}
+          
+          Format your response in markdown with:
+          - A brief introduction to the coding concepts
+          - Multiple code examples with increasing complexity
+          - Detailed line-by-line explanations
+          - Common pitfalls and best practices
+          - Exercises for the student to try
+          
+          Make sure all code is correct, well-commented, and follows best practices.
+        `;
       } else if (lessonType === 'exercise') {
-        userPrompt = `Design 3-5 practical exercises for "${title}" at a ${level} level.
-        
-        ${courseLearningTemplate}
-        
-        Include instructions, expected outcomes, and hints. Format in markdown with clear sections for each exercise.`;
+        userPrompt = `
+          Design 3-5 practical exercises for "${title}" at a ${level} level, focusing on Step ${stepNumber}: ${currentStep}.
+          
+          ${courseLearningTemplate}
+          
+          Format each exercise in markdown with:
+          - Clear objective
+          - Detailed instructions
+          - Any starter code or materials needed
+          - Expected outcome
+          - Hints for students who get stuck
+          - Solution (in a collapsed section if possible)
+          
+          Make the exercises progressive in difficulty and relevant to real-world applications.
+        `;
       } else {
-        userPrompt = `Summarize the key learnings about "${title}" at a ${level} level. 
-        
-        ${courseLearningTemplate}
-        
-        Include major concepts covered and how they connect to real-world applications. Format in markdown.`;
+        userPrompt = `
+          Create a comprehensive summary of "${title}" at a ${level} level, focusing on Step ${stepNumber}: ${currentStep}.
+          
+          ${courseLearningTemplate}
+          
+          Format your response in markdown with:
+          - Recap of key concepts covered
+          - How these concepts connect to real-world applications
+          - Common misconceptions and clarifications
+          - Resources for further learning
+          - Next steps in the learning journey
+          
+          Make this conclusion tie together all the key points and provide a clear path forward.
+        `;
       }
     }
 
+    console.log("Calling OpenAI API for course material generation");
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -122,7 +177,7 @@ serve(async (req) => {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 3500,
       }),
     });
 
@@ -140,8 +195,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         content: generatedContent,
-        title: title,
-        type: lessonType
+        title: `${title} - Step ${stepNumber}: ${currentStep}`,
+        type: lessonType,
+        step: {
+          number: stepNumber,
+          name: currentStep
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
