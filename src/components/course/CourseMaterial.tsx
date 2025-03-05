@@ -129,6 +129,96 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
     }
   };
 
+  // Generate Python Automation custom prompts based on lesson type
+  const getPythonAutomationPrompt = (lessonType: string, title: string, level: string): string => {
+    const steps = [
+      "Knowledge Assessment",
+      "Learning Path Design",
+      "Resource Curation",
+      "Practice Framework",
+      "Progress Tracking System",
+      "Study Schedule Generation"
+    ];
+    
+    // Get the appropriate step for this lesson
+    const stepIndex = displayedLessonIndex < steps.length ? displayedLessonIndex : steps.length - 1;
+    const currentStep = `Step ${stepIndex + 1}: ${steps[stepIndex]}`;
+    
+    // Common context for all prompts
+    const context = `
+You are creating materials for a Python Automation course at the ${level} level.
+The course is designed for students who can dedicate 15 weekly hours to learning.
+Students will use a combination of visual, hands-on, and reading materials.
+Their goal is to learn beginner and intermediate Python automation skills.
+
+Create content for "${currentStep}" related to "${title}".
+Format your response in markdown with clear sections, code examples where appropriate.
+`;
+    
+    if (lessonType === 'video') {
+      return `${context}
+      
+Create a comprehensive video script introducing Python Automation fundamentals. 
+Focus on the following aspects:
+1. What this step covers and why it's important for Python Automation
+2. Key concepts that will be introduced
+3. How this fits into the overall learning journey
+4. What students will be able to do after mastering these concepts
+
+Make this engaging and motivational for visual learners.`;
+    }
+    
+    if (lessonType === 'text') {
+      return `${context}
+      
+Create detailed educational text content covering:
+1. Detailed breakdown of ${currentStep}
+2. Explanation of core concepts and terminology
+3. How this applies specifically to Python Automation
+4. Common pitfalls and how to avoid them
+5. Real-world relevance and applications
+
+Include bullet points for key concepts and make complex ideas accessible.`;
+    }
+    
+    if (lessonType === 'code') {
+      return `${context}
+      
+Provide practical Python code examples demonstrating:
+1. Key automation techniques related to ${currentStep}
+2. Common automation patterns and best practices
+3. Step-by-step explanation of each code sample
+4. How to modify the code for different scenarios
+
+Include well-commented code blocks with explanations before and after each example.`;
+    }
+    
+    if (lessonType === 'exercise') {
+      return `${context}
+      
+Design 3-5 practical exercises for Python Automation related to ${currentStep}:
+1. Create progressive challenges from basic to advanced
+2. Provide clear instructions for each exercise
+3. Include expected outcomes and success criteria
+4. Offer hints for students who get stuck
+5. Show sample solutions with explanations
+
+Make exercises practical and relevant to real-world automation tasks.`;
+    }
+    
+    // Conclusion
+    return `${context}
+    
+Create a comprehensive summary of ${title} focusing on:
+1. Key takeaways from ${currentStep}
+2. How this connects to other parts of Python Automation
+3. Next steps in the learning journey
+4. Practical applications of what was learned
+5. Resources for further exploration
+
+Reinforce the most important concepts and provide a clear path forward.`;
+  };
+
   const generateCourseMaterial = async () => {
     try {
       const { data: course } = await supabase
@@ -156,6 +246,15 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
           };
           setCourseMaterials([...updatedMaterials]);
           
+          // Check if this is a Python Automation course to use custom prompts
+          const isPythonAutomation = course.title.toLowerCase().includes('python') && 
+                                    course.title.toLowerCase().includes('automation');
+          
+          // Generate custom prompt for Python Automation
+          const customPrompt = isPythonAutomation 
+            ? getPythonAutomationPrompt(lessonTypes[i], course.title, course.level || level)
+            : undefined;
+          
           // Generate content using OpenAI
           const response = await supabase.functions.invoke('generate-course-material', {
             body: {
@@ -164,7 +263,8 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
               field: course.field || field,
               level: course.level || level,
               lessonIndex: i,
-              lessonType: lessonTypes[i]
+              lessonType: lessonTypes[i],
+              customPrompt
             }
           });
           

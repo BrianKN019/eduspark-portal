@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -16,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { courseId, title, field, level, lessonIndex, lessonType } = await req.json();
+    const { courseId, title, field, level, lessonIndex, lessonType, customPrompt } = await req.json();
     
     console.log(`Generating material for course ${courseId}, lesson ${lessonIndex}, type ${lessonType}`);
     
@@ -25,18 +24,25 @@ serve(async (req) => {
     }
 
     // Construct the prompt based on course info and lesson type
-    let prompt = `You are an expert course creator for ${field} at the ${level} level. `;
+    let systemPrompt = `You are an expert course creator for ${field} at the ${level} level.`;
+    let userPrompt = "";
     
-    if (lessonType === 'video') {
-      prompt += `Write a comprehensive script for a video introduction lesson about "${title}". Include key concepts, core ideas, and why this topic matters. Format it in markdown with clear sections.`;
-    } else if (lessonType === 'text') {
-      prompt += `Create detailed educational text content about "${title}" at a ${level} level. Include explanations, examples, and key concepts. Format it in markdown with clear sections and bullet points where appropriate.`;
-    } else if (lessonType === 'code') {
-      prompt += `Provide practical code examples and explanations for "${title}" at a ${level} level. Include comments explaining what each part does. For non-programming subjects, provide practical frameworks, templates or models instead. Format in markdown with code blocks.`;
-    } else if (lessonType === 'exercise') {
-      prompt += `Design 3-5 practical exercises for "${title}" at a ${level} level. Include instructions, expected outcomes, and hints. Format in markdown with clear sections for each exercise.`;
+    if (customPrompt) {
+      // If a custom prompt is provided, use it
+      userPrompt = customPrompt;
     } else {
-      prompt += `Summarize the key learnings about "${title}" at a ${level} level. Include major concepts covered and how they connect to real-world applications. Format in markdown.`;
+      // Otherwise use default prompts based on lesson type
+      if (lessonType === 'video') {
+        userPrompt = `Write a comprehensive script for a video introduction lesson about "${title}". Include key concepts, core ideas, and why this topic matters. Format it in markdown with clear sections.`;
+      } else if (lessonType === 'text') {
+        userPrompt = `Create detailed educational text content about "${title}" at a ${level} level. Include explanations, examples, and key concepts. Format it in markdown with clear sections and bullet points where appropriate.`;
+      } else if (lessonType === 'code') {
+        userPrompt = `Provide practical code examples and explanations for "${title}" at a ${level} level. Include comments explaining what each part does. For non-programming subjects, provide practical frameworks, templates or models instead. Format in markdown with code blocks.`;
+      } else if (lessonType === 'exercise') {
+        userPrompt = `Design 3-5 practical exercises for "${title}" at a ${level} level. Include instructions, expected outcomes, and hints. Format in markdown with clear sections for each exercise.`;
+      } else {
+        userPrompt = `Summarize the key learnings about "${title}" at a ${level} level. Include major concepts covered and how they connect to real-world applications. Format in markdown.`;
+      }
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -48,11 +54,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are an expert course creator who produces high-quality educational content. Your responses should be well-structured, comprehensive, and directly usable in an online course.' },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 1500,
+        max_tokens: 2000,
       }),
     });
 

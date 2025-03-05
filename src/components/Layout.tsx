@@ -18,13 +18,13 @@ const Layout: React.FC<LayoutProps> = ({ toggleTheme, theme }) => {
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header toggleTheme={toggleTheme} theme={theme} />
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.main 
             className="flex-1 overflow-x-hidden overflow-y-auto bg-background pt-6 md:pt-0"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
             key={location.pathname}
           >
             <div className="container mx-auto px-6 py-8 md:py-4">
