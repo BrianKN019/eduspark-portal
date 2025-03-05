@@ -26,9 +26,11 @@ const CourseDetail = () => {
     enabled: !!courseId,
     retry: 3,
     retryDelay: 1000,
-    onError: (err) => {
-      console.error("Error fetching course details:", err);
-      toast.error("Failed to load course details. Please try again.");
+    meta: {
+      onError: (err: any) => {
+        console.error("Error fetching course details:", err);
+        toast.error("Failed to load course details. Please try again.");
+      }
     }
   });
 
