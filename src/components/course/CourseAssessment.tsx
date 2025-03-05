@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { generateAssessment } from '@/lib/api';
-import { CheckCircle, X, AlertTriangle, Trophy, Loader2, Brain, BrainCircuit, Medal } from 'lucide-react';
+import { CheckCircle, X, AlertTriangle, Trophy, Loader2, Brain, BrainCircuit, Medal, CalendarDays } from 'lucide-react';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -61,8 +60,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      // Use a type assertion since we just created this table
-      // and TypeScript doesn't know about it yet
       const { data, error } = await supabase
         .from('assessment_results')
         .select('*')
@@ -109,7 +106,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
   const handleSubmit = () => {
     if (!assessment) return;
     
-    // Check if all questions are answered
     const allAnswered = assessment.questions.every(q => answers[q.id] !== undefined);
     
     if (!allAnswered) {
@@ -117,7 +113,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       return;
     }
     
-    // Calculate score
     let correctAnswers = 0;
     assessment.questions.forEach(question => {
       if (answers[question.id] === question.correctAnswer) {
@@ -130,7 +125,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     setIsSubmitted(true);
     setShowExplanation(true);
     
-    // Save the assessment result
     saveAssessmentResult(calculatedScore);
   };
   
@@ -139,7 +133,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      // Get the current course progress
       const { data: progressData, error: progressError } = await supabase
         .from('course_progress')
         .select('*')
@@ -153,27 +146,18 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         return;
       }
       
-      // Check if this is a better score than the previous one
       const currentProgress = progressData?.progress_percentage || 0;
       const currentAssessmentScore = progressData?.assessment_score || 0;
       
       if (score > currentAssessmentScore) {
-        // Calculate new progress
-        // Assessment contributes 30% to the overall progress
-        // Course material contributes 70%
-        
-        // Calculate course material progress (70% of total)
         const lessonsProgress = progressData?.completed_lessons?.length 
-          ? (progressData.completed_lessons.length / 10) * 70 // Assuming 10 lessons per course
+          ? (progressData.completed_lessons.length / 10) * 70
           : 0;
         
-        // Calculate assessment progress (30% of total)
         const assessmentProgress = (score / 100) * 30;
         
-        // Calculate total progress
         const totalProgress = Math.round(lessonsProgress + assessmentProgress);
         
-        // If the new total progress is higher, update the progress
         if (totalProgress > currentProgress) {
           const { error: updateError } = await supabase
             .from('course_progress')
@@ -193,7 +177,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
             onAssessmentComplete(totalProgress);
           }
         } else {
-          // Just save the assessment score without updating progress
           const { error: updateError } = await supabase
             .from('course_progress')
             .update({
@@ -213,7 +196,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         }
       }
       
-      // Save the assessment result
       const { error } = await supabase
         .from('assessment_results')
         .insert({
@@ -228,7 +210,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
         console.error("Error saving assessment result:", error);
         toast.error("Failed to save assessment result");
       } else {
-        // Refresh the list of previous assessments
         fetchPreviousAssessments();
       }
       
@@ -463,7 +444,7 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
                   {result.difficulty.charAt(0).toUpperCase() + result.difficulty.slice(1)} Level
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
-                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                  <CalendarDays className="h-3.5 w-3.5 mr-1.5" />
                   {new Date(result.completed_at).toLocaleDateString(undefined, {
                     year: 'numeric',
                     month: 'short',
@@ -627,7 +608,6 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
               <div className="mb-6">
                 <p className="mb-2 text-gray-700 dark:text-gray-300">{assessment.description}</p>
                 
-                {/* Progress bar */}
                 <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full mt-4">
                   <div
                     className="h-2 bg-blue-500 rounded-full transition-all duration-300"
