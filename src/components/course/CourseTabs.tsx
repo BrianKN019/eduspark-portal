@@ -86,6 +86,8 @@ const CourseTabs: React.FC<CourseTabsProps> = ({
           onLessonComplete={onLessonComplete}
           userProgress={userProgress}
           courseName={courseName}
+          field={field}
+          level={level}
         />
       </TabsContent>
       

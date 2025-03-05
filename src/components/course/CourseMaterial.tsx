@@ -1,111 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, BookOpen, Video, FileText, Code, PenTool, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { updateCourseProgress } from '@/lib/api';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
-// Sample course content structure - in a real app, this would come from an API
-const courseMaterials = [
-  {
-    title: 'Introduction',
-    type: 'video',
-    icon: <Video className="h-5 w-5 text-blue-500" />,
-    content: <div className="prose dark:prose-invert max-w-none">
-      <p>Welcome to this course! In this introduction, we'll cover the basic concepts and what you can expect to learn.</p>
-      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-4 flex items-center justify-center">
-        <Video className="h-10 w-10 text-blue-500 mr-2" />
-        <span className="text-gray-600 dark:text-gray-300">Video content would load here</span>
-      </div>
-      <p>Make sure to complete all modules to get the most out of this course experience.</p>
-    </div>
-  },
-  {
-    title: 'Core Concepts',
-    type: 'text',
-    icon: <FileText className="h-5 w-5 text-green-500" />,
-    content: <div className="prose dark:prose-invert max-w-none">
-      <h3>Important Fundamentals</h3>
-      <p>Let's dive into the core concepts that form the foundation of this subject. These concepts are essential for understanding the more advanced topics we'll cover later.</p>
-      <ul>
-        <li>Concept 1: Basic structures and patterns</li>
-        <li>Concept 2: Key methodologies and approaches</li>
-        <li>Concept 3: Standard practices in the industry</li>
-      </ul>
-      <p>Understanding these fundamentals will help you build a strong mental model of how everything fits together.</p>
-    </div>
-  },
-  {
-    title: 'Practical Examples',
-    type: 'code',
-    icon: <Code className="h-5 w-5 text-purple-500" />,
-    content: <div className="prose dark:prose-invert max-w-none">
-      <h3>Code Examples</h3>
-      <p>Let's look at some practical examples to reinforce the concepts we've learned.</p>
-      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto">
-        <code className="text-sm">
-          {`// Example implementation
-function calculateResult(data) {
-  let result = 0;
-  
-  // Process the data
-  for (const item of data) {
-    result += item.value * item.weight;
-  }
-  
-  return result;
-}`}
-        </code>
-      </pre>
-      <p>Try running this code with different inputs to see how it behaves.</p>
-    </div>
-  },
-  {
-    title: 'Practice Exercise',
-    type: 'exercise',
-    icon: <PenTool className="h-5 w-5 text-orange-500" />,
-    content: <div className="prose dark:prose-invert max-w-none">
-      <h3>Interactive Exercise</h3>
-      <p>Now it's time to apply what you've learned with a hands-on exercise.</p>
-      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg my-4">
-        <h4 className="font-medium text-lg">Your Task:</h4>
-        <p>Modify the code example from the previous section to handle negative values differently. Specifically:</p>
-        <ul>
-          <li>If an item has a negative value, it should be treated as zero.</li>
-          <li>Keep track of how many negative values were encountered.</li>
-          <li>Return both the result and the count of negative values.</li>
-        </ul>
-        <div className="mt-4">
-          <p className="font-medium">Submit your solution:</p>
-          <textarea 
-            className="w-full h-32 p-2 border rounded-md bg-white dark:bg-gray-700 mt-2 font-mono text-sm"
-            placeholder="Write your solution here..."
-          ></textarea>
-        </div>
-      </div>
-    </div>
-  },
-  {
-    title: 'Conclusion',
-    type: 'text',
-    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
-    content: <div className="prose dark:prose-invert max-w-none">
-      <h3>Summary of What We've Learned</h3>
-      <p>Congratulations on completing this module! Let's summarize what we've covered:</p>
-      <ul>
-        <li>The fundamental concepts and their importance</li>
-        <li>Practical implementation details through code examples</li>
-        <li>Hands-on experience through interactive exercises</li>
-      </ul>
-      <p>In the next module, we'll build on these foundations to explore more advanced topics. Make sure you feel comfortable with the material here before moving on.</p>
-      <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg my-4 border-l-4 border-green-500">
-        <p className="font-medium text-green-700 dark:text-green-400">You've completed this section! Mark it as complete to track your progress.</p>
-      </div>
-    </div>
-  }
-];
+interface LessonContent {
+  title: string;
+  type: 'video' | 'text' | 'code' | 'exercise' | 'conclusion';
+  icon: React.ReactNode;
+  content: React.ReactNode | string;
+  isLoading?: boolean;
+}
 
 interface CourseMaterialProps {
   courseId: string;
@@ -116,6 +26,8 @@ interface CourseMaterialProps {
   courseName?: string;
   initialProgress?: number;
   onProgressUpdate?: (progress: number) => void;
+  field?: string;
+  level?: string;
 }
 
 const CourseMaterial: React.FC<CourseMaterialProps> = ({ 
@@ -126,13 +38,52 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   userProgress = 0,
   courseName = "Course Material",
   initialProgress = 0,
-  onProgressUpdate
+  onProgressUpdate,
+  field = "General",
+  level = "Beginner"
 }) => {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [displayedLessonIndex, setDisplayedLessonIndex] = useState<number>(0);
+  const [courseMaterials, setCourseMaterials] = useState<LessonContent[]>([
+    {
+      title: 'Introduction',
+      type: 'video',
+      icon: <Video className="h-5 w-5 text-blue-500" />,
+      content: 'Loading course content...',
+      isLoading: true
+    },
+    {
+      title: 'Core Concepts',
+      type: 'text',
+      icon: <FileText className="h-5 w-5 text-green-500" />,
+      content: 'Loading course content...',
+      isLoading: true
+    },
+    {
+      title: 'Practical Examples',
+      type: 'code',
+      icon: <Code className="h-5 w-5 text-purple-500" />,
+      content: 'Loading course content...',
+      isLoading: true
+    },
+    {
+      title: 'Practice Exercise',
+      type: 'exercise',
+      icon: <PenTool className="h-5 w-5 text-orange-500" />,
+      content: 'Loading course content...',
+      isLoading: true
+    },
+    {
+      title: 'Conclusion',
+      type: 'conclusion',
+      icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+      content: 'Loading course content...',
+      isLoading: true
+    }
+  ]);
+  
   const totalSteps = courseMaterials.length;
   
-  // Update displayed lesson when currentLessonIndex changes
   useEffect(() => {
     // Ensure we're showing the correct lesson based on currentLessonIndex
     // currentLessonIndex is 1-based, but displayedLessonIndex needs to be 0-based for array indexing
@@ -143,6 +94,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   
   useEffect(() => {
     fetchCompletedLessons();
+    generateCourseMaterial();
   }, [courseId]);
   
   const fetchCompletedLessons = async () => {
@@ -174,6 +126,73 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       }
     } catch (error) {
       console.error('Error fetching lesson progress:', error);
+    }
+  };
+
+  const generateCourseMaterial = async () => {
+    try {
+      const { data: course } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .single();
+
+      if (!course) {
+        toast.error("Failed to find course data");
+        return;
+      }
+
+      const lessonTypes = ['video', 'text', 'code', 'exercise', 'conclusion'];
+      
+      // Generate content for each lesson
+      const updatedMaterials = [...courseMaterials];
+      
+      for (let i = 0; i < lessonTypes.length; i++) {
+        try {
+          // Mark this lesson as loading
+          updatedMaterials[i] = {
+            ...updatedMaterials[i],
+            isLoading: true
+          };
+          setCourseMaterials([...updatedMaterials]);
+          
+          // Generate content using OpenAI
+          const response = await supabase.functions.invoke('generate-course-material', {
+            body: {
+              courseId,
+              title: course.title,
+              field: course.field || field,
+              level: course.level || level,
+              lessonIndex: i,
+              lessonType: lessonTypes[i]
+            }
+          });
+          
+          if (response.error) {
+            throw new Error(response.error);
+          }
+          
+          // Update with generated content
+          updatedMaterials[i] = {
+            ...updatedMaterials[i],
+            content: response.data.content,
+            isLoading: false
+          };
+          
+          setCourseMaterials([...updatedMaterials]);
+        } catch (error) {
+          console.error(`Error generating material for lesson ${i}:`, error);
+          updatedMaterials[i] = {
+            ...updatedMaterials[i],
+            content: `Failed to load content. Please try again later. Error: ${error.message}`,
+            isLoading: false
+          };
+          setCourseMaterials([...updatedMaterials]);
+        }
+      }
+    } catch (error) {
+      console.error('Error generating course materials:', error);
+      toast.error("Failed to generate course materials");
     }
   };
   
@@ -371,6 +390,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                           }`}>
                             {material.title}
                           </h4>
+                          {material.isLoading && (
+                            <Loader2 className="ml-2 h-3 w-3 animate-spin text-blue-500" />
+                          )}
                         </div>
                         
                         {isActive && (
@@ -379,6 +401,7 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                             {material.type === 'text' && 'Read through the learning materials'}
                             {material.type === 'code' && 'Explore the code examples'}
                             {material.type === 'exercise' && 'Complete the practice exercise'}
+                            {material.type === 'conclusion' && 'Review what you\'ve learned'}
                           </p>
                         )}
                       </div>
@@ -438,9 +461,21 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
                 {currentMaterial.icon}
                 {currentMaterial.title}
               </h3>
-              <div className="prose dark:prose-invert max-w-none">
-                {currentMaterial.content}
-              </div>
+              
+              {currentMaterial.isLoading ? (
+                <div className="flex flex-col items-center justify-center p-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400">Generating course content...</p>
+                </div>
+              ) : (
+                <div className="prose dark:prose-invert max-w-none">
+                  <ReactMarkdown>
+                    {typeof currentMaterial.content === 'string' 
+                      ? currentMaterial.content 
+                      : 'Content is not available in text format.'}
+                  </ReactMarkdown>
+                </div>
+              )}
             </div>
             
             <div className="flex justify-between mt-8">
