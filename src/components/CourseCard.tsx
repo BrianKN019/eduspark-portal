@@ -28,19 +28,19 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 
   const handleClick = () => {
     if (progress > 0) {
       // If already enrolled, navigate to course detail
-      navigate(`/courses/${course.id}`);
+      navigate(`/dashboard/courses/${course.id}`);
     } else {
       // If not enrolled, trigger enrollment
       onEnroll();
       // After enrollment, navigate to course detail
-      setTimeout(() => navigate(`/courses/${course.id}`), 500);
+      setTimeout(() => navigate(`/dashboard/courses/${course.id}`), 500);
     }
   };
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {course.thumbnail_url && (
-        <div className="w-full h-32 overflow-hidden cursor-pointer" onClick={() => navigate(`/courses/${course.id}`)}>
+        <div className="w-full h-32 overflow-hidden cursor-pointer" onClick={() => navigate(`/dashboard/courses/${course.id}`)}>
           <img 
             src={course.thumbnail_url} 
             alt={course.title}
@@ -49,7 +49,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnroll, progress = 0 
         </div>
       )}
       <CardHeader>
-        <CardTitle className="line-clamp-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={() => navigate(`/courses/${course.id}`)}>
+        <CardTitle className="line-clamp-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={() => navigate(`/dashboard/courses/${course.id}`)}>
           {course.title}
         </CardTitle>
       </CardHeader>

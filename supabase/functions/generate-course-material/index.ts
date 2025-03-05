@@ -24,24 +24,88 @@ serve(async (req) => {
     }
 
     // Construct the prompt based on course info and lesson type
-    let systemPrompt = `You are an expert course creator for ${field} at the ${level} level.`;
+    let systemPrompt = `You are an expert course creator for ${field} at the ${level} level. Follow a structured 6-step learning approach for all content creation to ensure comprehensive, effective learning.`;
     let userPrompt = "";
     
     if (customPrompt) {
       // If a custom prompt is provided, use it
       userPrompt = customPrompt;
     } else {
+      // Create a general course outline template
+      const courseLearningTemplate = `
+      # ${title} - ${level} Level Course
+      
+      ## Step 1: Knowledge Assessment
+      1. Break down ${title} into core components
+      2. Evaluate complexity levels of each component
+      3. Map prerequisites and dependencies
+      4. Identify foundational concepts
+      
+      ## Step 2: Learning Path Design
+      1. Create progression milestones based on ${level} level
+      2. Structure topics in optimal learning sequence
+      3. Estimate time requirements per topic
+      4. Align with typical learning constraints
+      
+      ## Step 3: Resource Curation
+      1. Identify learning materials matching different learning styles:
+         - Video resources
+         - Reading materials
+         - Interactive exercises
+         - Practice projects
+      2. Rank resources by effectiveness
+      3. Create resource playlist
+      
+      ## Step 4: Practice Framework
+      1. Design exercises for each topic
+      2. Create real-world application scenarios
+      3. Develop progress checkpoints
+      4. Structure review intervals
+      
+      ## Step 5: Progress Tracking System
+      1. Define measurable progress indicators
+      2. Create assessment criteria
+      3. Design feedback loops
+      4. Establish milestone completion metrics
+      
+      ## Step 6: Study Schedule Suggestion
+      1. Break down learning into manageable tasks
+      2. Incorporate rest and review periods
+      3. Add checkpoint assessments
+      4. Balance theory and practice
+      `;
+
       // Otherwise use default prompts based on lesson type
       if (lessonType === 'video') {
-        userPrompt = `Write a comprehensive script for a video introduction lesson about "${title}". Include key concepts, core ideas, and why this topic matters. Format it in markdown with clear sections.`;
+        userPrompt = `Write a comprehensive script for a video introduction lesson about "${title}" at a ${level} level. 
+        
+        ${courseLearningTemplate}
+        
+        Format your response in markdown with clear sections, and focus on what would be said in the video.`;
       } else if (lessonType === 'text') {
-        userPrompt = `Create detailed educational text content about "${title}" at a ${level} level. Include explanations, examples, and key concepts. Format it in markdown with clear sections and bullet points where appropriate.`;
+        userPrompt = `Create detailed educational text content about "${title}" at a ${level} level. 
+        
+        ${courseLearningTemplate}
+        
+        Include explanations, examples, and key concepts. Format it in markdown with clear sections and bullet points where appropriate.`;
       } else if (lessonType === 'code') {
-        userPrompt = `Provide practical code examples and explanations for "${title}" at a ${level} level. Include comments explaining what each part does. For non-programming subjects, provide practical frameworks, templates or models instead. Format in markdown with code blocks.`;
+        userPrompt = `Provide practical code examples and explanations for "${title}" at a ${level} level. 
+        
+        ${courseLearningTemplate}
+        
+        Include comments explaining what each part does. For non-programming subjects, provide practical frameworks, templates or models instead. Format in markdown with code blocks.`;
       } else if (lessonType === 'exercise') {
-        userPrompt = `Design 3-5 practical exercises for "${title}" at a ${level} level. Include instructions, expected outcomes, and hints. Format in markdown with clear sections for each exercise.`;
+        userPrompt = `Design 3-5 practical exercises for "${title}" at a ${level} level.
+        
+        ${courseLearningTemplate}
+        
+        Include instructions, expected outcomes, and hints. Format in markdown with clear sections for each exercise.`;
       } else {
-        userPrompt = `Summarize the key learnings about "${title}" at a ${level} level. Include major concepts covered and how they connect to real-world applications. Format in markdown.`;
+        userPrompt = `Summarize the key learnings about "${title}" at a ${level} level. 
+        
+        ${courseLearningTemplate}
+        
+        Include major concepts covered and how they connect to real-world applications. Format in markdown.`;
       }
     }
 
@@ -58,7 +122,7 @@ serve(async (req) => {
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 

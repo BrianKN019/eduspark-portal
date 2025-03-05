@@ -45,7 +45,7 @@ const DashboardCourses: React.FC = () => {
   });
 
   const handleCourseClick = (courseId: string) => {
-    navigate(`/courses/${courseId}`);
+    navigate(`/dashboard/courses/${courseId}`);
   };
 
   const isLoading = coursesLoading || progressLoading;
@@ -65,7 +65,7 @@ const DashboardCourses: React.FC = () => {
         </CardHeader>
         <CardContent className="text-center p-6">
           <p className="mb-4">You haven't enrolled in any courses yet.</p>
-          <Button onClick={() => navigate('/courses')} variant="default">
+          <Button onClick={() => navigate('/dashboard/courses')} variant="default">
             Browse Courses
           </Button>
         </CardContent>
@@ -123,7 +123,7 @@ const DashboardCourses: React.FC = () => {
         ))}
         
         <Button 
-          onClick={() => navigate('/courses')} 
+          onClick={() => navigate('/dashboard/courses')} 
           variant="outline" 
           className="w-full mt-2"
         >

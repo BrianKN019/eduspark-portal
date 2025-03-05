@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import CourseTabs from '@/components/course/CourseTabs';
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('materials');
   const [userProgress, setUserProgress] = useState(0);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
@@ -23,6 +24,12 @@ const CourseDetail = () => {
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId || ''),
     enabled: !!courseId,
+    retry: 3,
+    retryDelay: 1000,
+    onError: (err) => {
+      console.error("Error fetching course details:", err);
+      toast.error("Failed to load course details. Please try again.");
+    }
   });
 
   const { data: progress, refetch: refetchProgress } = useQuery({
@@ -89,6 +96,16 @@ const CourseDetail = () => {
     setHasCertificate(!!certificate);
   }, [certificate]);
 
+  useEffect(() => {
+    console.log("CourseDetail mounted, courseId:", courseId);
+    // Check if we're on the correct page
+    if (!courseId) {
+      console.error("No courseId found in URL");
+      toast.error("Course not found");
+      navigate('/dashboard/courses');
+    }
+  }, [courseId, navigate]);
+
   const handleEnroll = async () => {
     try {
       if (!courseId) return;
@@ -133,7 +150,10 @@ const CourseDetail = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <p className="text-lg">Loading course...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg">Loading course...</p>
+        </div>
       </div>
     );
   }
@@ -141,7 +161,13 @@ const CourseDetail = () => {
   if (error || !course) {
     return (
       <div className="flex flex-col justify-center items-center h-96">
-        <p className="text-lg text-red-500">Error loading course. Please try again later.</p>
+        <p className="text-lg text-red-500 mb-4">Error loading course. Please try again later.</p>
+        <button 
+          onClick={() => navigate('/dashboard/courses')}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Return to Courses
+        </button>
       </div>
     );
   }

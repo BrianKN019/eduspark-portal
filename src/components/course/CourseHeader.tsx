@@ -25,7 +25,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
         <div className="flex items-center space-x-4 mb-4">
           <Button 
             variant="outline"
-            onClick={() => navigate('/courses')}
+            onClick={() => navigate('/dashboard/courses')}
             className="flex items-center"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Courses
