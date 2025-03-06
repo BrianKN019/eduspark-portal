@@ -300,54 +300,62 @@ serve(async (req) => {
     }
 
     console.log("Calling OpenAI API for course material generation");
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',  // Using the most capable model for high-quality content
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const generatedContent = data.choices[0].message.content;
-
-    console.log('Successfully generated course material');
     
-    return new Response(
-      JSON.stringify({ 
-        content: generatedContent,
-        title: `${title} - Step ${stepNumber}: ${currentStep}`,
-        type: lessonType,
-        step: {
-          number: stepNumber,
-          name: currentStep
-        }
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',  // Using the most capable model for high-quality content
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error:', errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
-    );
-    
+
+      const data = await response.json();
+      const generatedContent = data.choices[0].message.content;
+
+      console.log('Successfully generated course material');
+      
+      return new Response(
+        JSON.stringify({ 
+          content: generatedContent,
+          title: `${title} - Step ${stepNumber}: ${currentStep}`,
+          type: lessonType,
+          step: {
+            number: stepNumber,
+            name: currentStep
+          }
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } catch (openaiError) {
+      console.error('Error calling OpenAI API:', openaiError);
+      throw new Error(`Error generating content with OpenAI: ${openaiError.message}`);
+    }
   } catch (error) {
     console.error('Error in generate-course-material function:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Unknown error occurred', 
+        errorDetails: error.stack || 'No stack trace available'
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,8 +84,6 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
   const totalSteps = courseMaterials.length;
   
   useEffect(() => {
-    // Ensure we're showing the correct lesson based on currentLessonIndex
-    // currentLessonIndex is 1-based, but displayedLessonIndex needs to be 0-based for array indexing
     if (currentLessonIndex > 0) {
       setDisplayedLessonIndex(currentLessonIndex - 1);
     }
@@ -117,11 +114,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       if (data?.completed_lessons) {
         setCompletedLessons(data.completed_lessons);
         
-        // If user has a saved current lesson index, use it
         if (data.current_lesson_index !== null && data.current_lesson_index !== undefined) {
           setDisplayedLessonIndex(data.current_lesson_index);
-          // Set the current lesson index to match the database
-          setCurrentLessonIndex(data.current_lesson_index + 1); // +1 because currentLessonIndex is 1-based
+          setCurrentLessonIndex(data.current_lesson_index + 1);
         }
       }
     } catch (error) {
@@ -129,7 +124,6 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
     }
   };
 
-  // Generate Python Automation custom prompts based on lesson type
   const getPythonAutomationPrompt = (lessonType: string, title: string, level: string): string => {
     const steps = [
       "Knowledge Assessment",
@@ -140,11 +134,9 @@ const CourseMaterial: React.FC<CourseMaterialProps> = ({
       "Study Schedule Generation"
     ];
     
-    // Get the appropriate step for this lesson
     const stepIndex = displayedLessonIndex < steps.length ? displayedLessonIndex : steps.length - 1;
     const currentStep = `Step ${stepIndex + 1}: ${steps[stepIndex]}`;
     
-    // Common context for all prompts
     const context = `
 You are creating materials for a Python Automation course at the ${level} level.
 The course is designed for students who can dedicate 15 weekly hours to learning.
@@ -206,7 +198,6 @@ Design 3-5 practical exercises for Python Automation related to ${currentStep}:
 Make exercises practical and relevant to real-world automation tasks.`;
     }
     
-    // Conclusion
     return `${context}
     
 Create a comprehensive summary of ${title} focusing on:
@@ -234,29 +225,24 @@ Reinforce the most important concepts and provide a clear path forward.`;
 
       const lessonTypes = ['video', 'text', 'code', 'exercise', 'conclusion'];
       
-      // Generate content for each lesson
       const updatedMaterials = [...courseMaterials];
       
       for (let i = 0; i < lessonTypes.length; i++) {
         try {
-          // Mark this lesson as loading
           updatedMaterials[i] = {
             ...updatedMaterials[i],
             isLoading: true
           };
           setCourseMaterials([...updatedMaterials]);
           
-          // Check if this is a Python Automation course to use custom prompts
           const isPythonAutomation = course.title.toLowerCase().includes('python') && 
                                     course.title.toLowerCase().includes('automation');
           
-          // Generate custom prompt for Python Automation
           const customPrompt = isPythonAutomation 
             ? getPythonAutomationPrompt(lessonTypes[i], course.title, course.level || level)
             : undefined;
           
-          // Generate content using OpenAI
-          const response = await supabase.functions.invoke('generate-course-material', {
+          const result = await supabase.functions.invoke('generate-course-material', {
             body: {
               courseId,
               title: course.title,
@@ -268,14 +254,18 @@ Reinforce the most important concepts and provide a clear path forward.`;
             }
           });
           
-          if (response.error) {
-            throw new Error(response.error);
+          if (result.error) {
+            console.error(`Error in edge function:`, result.error);
+            throw new Error(result.error);
           }
           
-          // Update with generated content
+          if (!result.data) {
+            throw new Error("No data returned from edge function");
+          }
+          
           updatedMaterials[i] = {
             ...updatedMaterials[i],
-            content: response.data.content,
+            content: result.data.content,
             isLoading: false
           };
           
@@ -288,6 +278,7 @@ Reinforce the most important concepts and provide a clear path forward.`;
             isLoading: false
           };
           setCourseMaterials([...updatedMaterials]);
+          toast.error(`Failed to load lesson ${i+1}. Please try again later.`);
         }
       }
     } catch (error) {
@@ -298,7 +289,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
   
   const markLessonComplete = async (lessonIndex: number) => {
     try {
-      // Prevent duplicate marking of completed lessons
       if (completedLessons.includes(lessonIndex)) return;
       
       const { data: { user } } = await supabase.auth.getUser();
@@ -307,11 +297,9 @@ Reinforce the most important concepts and provide a clear path forward.`;
         return;
       }
       
-      // Add the current lesson to completed lessons
       const updatedCompletedLessons = [...new Set([...completedLessons, lessonIndex])];
       setCompletedLessons(updatedCompletedLessons);
       
-      // Get the user's assessment score for this course
       const { data: progressData } = await supabase
         .from('course_progress')
         .select('assessment_score')
@@ -321,22 +309,17 @@ Reinforce the most important concepts and provide a clear path forward.`;
       
       const assessmentScore = progressData?.assessment_score || 0;
       
-      // Calculate material progress (30% of total)
       const materialProgressPercentage = Math.round((updatedCompletedLessons.length / totalSteps) * 100);
       const materialContribution = (materialProgressPercentage / 100) * 30;
       
-      // Calculate assessment contribution (70% of total if score is >= 70%, otherwise proportional)
       const assessmentContribution = assessmentScore >= 70 
-        ? 70 // Full contribution if passed with 70% or higher
-        : (assessmentScore / 100) * 70; // Proportional contribution
+        ? 70
+        : (assessmentScore / 100) * 70;
       
-      // Calculate total progress
       const totalProgress = Math.round(materialContribution + assessmentContribution);
       
-      // Update progress in the database including the current lesson index
       await updateCourseProgress(courseId, totalProgress, displayedLessonIndex);
       
-      // Notify parent component
       if (onProgressUpdate) {
         onProgressUpdate(totalProgress);
       }
@@ -350,31 +333,27 @@ Reinforce the most important concepts and provide a clear path forward.`;
   
   const handleNext = async () => {
     if (displayedLessonIndex < totalSteps - 1) {
-      // First mark the current lesson as complete if not already completed
       if (!completedLessons.includes(displayedLessonIndex)) {
         if (onLessonComplete) {
           try {
             await onLessonComplete(displayedLessonIndex);
-            // Move to next lesson after completion is confirmed
             const nextIndex = displayedLessonIndex + 1;
             setDisplayedLessonIndex(nextIndex);
-            setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
+            setCurrentLessonIndex(nextIndex + 1);
           } catch (error) {
             console.error('Error completing lesson:', error);
             toast.error('Failed to complete lesson');
           }
         } else {
           await markLessonComplete(displayedLessonIndex);
-          // Move to next lesson after marking complete
           const nextIndex = displayedLessonIndex + 1;
           setDisplayedLessonIndex(nextIndex);
-          setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
+          setCurrentLessonIndex(nextIndex + 1);
         }
       } else {
-        // If already completed, just move to next
         const nextIndex = displayedLessonIndex + 1;
         setDisplayedLessonIndex(nextIndex);
-        setCurrentLessonIndex(nextIndex + 1); // +1 because currentLessonIndex is 1-based
+        setCurrentLessonIndex(nextIndex + 1);
       }
     }
   };
@@ -383,26 +362,23 @@ Reinforce the most important concepts and provide a clear path forward.`;
     if (displayedLessonIndex > 0) {
       const prevIndex = displayedLessonIndex - 1;
       setDisplayedLessonIndex(prevIndex);
-      setCurrentLessonIndex(prevIndex + 1); // +1 because currentLessonIndex is 1-based
+      setCurrentLessonIndex(prevIndex + 1);
     }
   };
   
   const handleStepClick = (step: number) => {
-    // Only allow clicking on completed steps or the next available step
-    const stepIndex = step - 1; // Convert 1-based step to 0-based index
+    const stepIndex = step - 1;
     
     if (completedLessons.includes(stepIndex) || stepIndex <= Math.max(...completedLessons, -1) + 1) {
       setDisplayedLessonIndex(stepIndex);
-      setCurrentLessonIndex(step); // Keep currentLessonIndex as 1-based
+      setCurrentLessonIndex(step);
     } else {
       toast.info('Complete previous lessons first');
     }
   };
   
-  // Safely access the current material using displayedLessonIndex
   const currentMaterial = courseMaterials[displayedLessonIndex] || courseMaterials[0];
-
-  // Calculate material progress percentage (just for the stepper display)
+  
   const materialProgressPercentage = completedLessons.length > 0
     ? Math.round((completedLessons.length / totalSteps) * 100)
     : 0;
@@ -422,7 +398,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
           <div className="border-r border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800 md:max-h-screen md:overflow-y-auto">
             <h3 className="font-semibold text-lg mb-4 text-gray-800 dark:text-white">Course Content</h3>
             
-            {/* Improved Stepper Component */}
             <div className="space-y-4">
               {courseMaterials.map((material, index) => {
                 const stepNumber = index + 1;
@@ -432,7 +407,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
                 
                 return (
                   <div key={index} className="relative">
-                    {/* Progress connector */}
                     {index > 0 && (
                       <div className="absolute top-0 left-5 -translate-x-1/2 h-full w-0.5 -mt-3">
                         <div 
@@ -445,14 +419,12 @@ Reinforce the most important concepts and provide a clear path forward.`;
                       </div>
                     )}
                     
-                    {/* Step item */}
                     <div 
                       className={`relative flex items-start group transition-all duration-300 rounded-lg
                         ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 p-3' : 'p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30'}
                         ${!isClickable ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       onClick={() => isClickable && handleStepClick(stepNumber)}
                     >
-                      {/* Step circle */}
                       <div className="flex-shrink-0 relative z-10">
                         <div 
                           className={`flex items-center justify-center h-10 w-10 rounded-full transition-all duration-500 ${
@@ -475,7 +447,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
                         </div>
                       </div>
                       
-                      {/* Content */}
                       <div className="ml-4 flex-1">
                         <div className="flex items-center">
                           {material.icon}
@@ -506,7 +477,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
                         )}
                       </div>
                       
-                      {/* Status indicator */}
                       {isCompleted && !isActive && (
                         <div className="ml-2 flex-shrink-0">
                           <CheckCircle className="h-4 w-4 text-green-500" />
@@ -518,7 +488,6 @@ Reinforce the most important concepts and provide a clear path forward.`;
               })}
             </div>
             
-            {/* Progress bar */}
             <div className="mt-6 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600 dark:text-gray-400">Material Progress</span>

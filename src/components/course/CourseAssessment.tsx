@@ -86,11 +86,32 @@ const CourseAssessment: React.FC<CourseAssessmentProps> = ({
     setShowExplanation(false);
     
     try {
-      const assessment = await generateAssessment(courseId, selectedDifficulty, courseName);
-      setAssessment(assessment);
+      const result = await supabase.functions.invoke('generate-assessment', {
+        body: {
+          courseId,
+          courseName,
+          field,
+          level,
+          difficulty: selectedDifficulty,
+          questionCount: selectedDifficulty === 'beginner' ? 5 : 
+                         selectedDifficulty === 'intermediate' ? 8 : 10
+        }
+      });
+      
+      if (result.error) {
+        console.error("Error from generate-assessment function:", result.error);
+        throw new Error(result.error);
+      }
+      
+      if (!result.data || !result.data.assessment) {
+        throw new Error("No assessment data returned from function");
+      }
+      
+      setAssessment(result.data.assessment);
+      toast.success("Assessment generated successfully!");
     } catch (error) {
       console.error("Error generating assessment:", error);
-      toast.error("Failed to generate assessment");
+      toast.error(`Failed to generate assessment: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

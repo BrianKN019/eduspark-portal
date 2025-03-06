@@ -65,71 +65,82 @@ serve(async (req) => {
       }
     `;
 
-    // Call OpenAI API with improved parameters for higher quality content
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',  // Using the latest and most capable model
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert educational content creator with advanced degrees in instructional design and subject matter expertise. You create assessments that are challenging yet fair, with educational value beyond just testing knowledge. Your questions should promote critical thinking and help students understand complex concepts more deeply.' 
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-    });
-
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0]) {
-      console.error('Invalid response from OpenAI API:', data);
-      throw new Error('Invalid response from OpenAI API');
-    }
-    
-    const generatedText = data.choices[0].message.content;
-    console.log("Generated assessment successfully");
-    
-    // Parse the JSON response from OpenAI
     try {
-      // Extract the JSON object from the response
-      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error('No valid JSON found in response');
-        throw new Error('No valid JSON found in response');
+      // Call OpenAI API with improved parameters for higher quality content
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',  // Using the latest and most capable model
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are an expert educational content creator with advanced degrees in instructional design and subject matter expertise. You create assessments that are challenging yet fair, with educational value beyond just testing knowledge. Your questions should promote critical thinking and help students understand complex concepts more deeply.' 
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error:', errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices || !data.choices[0]) {
+        console.error('Invalid response from OpenAI API:', data);
+        throw new Error('Invalid response from OpenAI API');
       }
       
-      const assessmentData = JSON.parse(jsonMatch[0]);
+      const generatedText = data.choices[0].message.content;
+      console.log("Generated assessment successfully");
       
-      // Add an ID to the assessment
-      assessmentData.id = `ai-assessment-${courseName.replace(/\s+/g, '-').toLowerCase()}-${difficulty}-${Date.now()}`;
-      
-      return new Response(
-        JSON.stringify({ assessment: assessmentData }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (parseError) {
-      console.error('Error parsing OpenAI response:', parseError);
-      // Fall back to static assessment if parsing fails
-      return new Response(
-        JSON.stringify({ 
-          assessment: generateStaticAssessment(courseName, field, difficulty, questionCount),
-          error: 'Failed to parse AI-generated assessment'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Parse the JSON response from OpenAI
+      try {
+        // Extract the JSON object from the response
+        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          console.error('No valid JSON found in response');
+          throw new Error('No valid JSON found in response');
+        }
+        
+        const assessmentData = JSON.parse(jsonMatch[0]);
+        
+        // Add an ID to the assessment
+        assessmentData.id = `ai-assessment-${courseName.replace(/\s+/g, '-').toLowerCase()}-${difficulty}-${Date.now()}`;
+        
+        return new Response(
+          JSON.stringify({ assessment: assessmentData }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (parseError) {
+        console.error('Error parsing OpenAI response:', parseError);
+        // Fall back to static assessment if parsing fails
+        return new Response(
+          JSON.stringify({ 
+            assessment: generateStaticAssessment(courseName, field, difficulty, questionCount),
+            error: 'Failed to parse AI-generated assessment'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (openaiError) {
+      console.error('Error calling OpenAI API:', openaiError);
+      throw new Error(`Error generating assessment with OpenAI: ${openaiError.message}`);
     }
   } catch (error) {
     console.error('Error in generate-assessment function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error.message || 'Unknown error occurred',
         assessment: null
       }),
       { 
