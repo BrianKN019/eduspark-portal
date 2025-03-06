@@ -32,7 +32,9 @@ const CertificateVerification: React.FC = () => {
     setLoading(true);
     
     try {
-      // Query Supabase for the certificate
+      console.log('Verifying certificate ID:', certificateId);
+      
+      // Query Supabase for the certificate without assuming it's a UUID
       const { data: certificate, error } = await supabase
         .from('certificates')
         .select(`
@@ -47,7 +49,7 @@ const CertificateVerification: React.FC = () => {
         .eq('id', certificateId)
         .single();
       
-      if (error || !certificate) {
+      if (error) {
         console.error('Certificate lookup error:', error);
         setVerificationResult('failure');
         setCertificateData(null);
@@ -57,14 +59,15 @@ const CertificateVerification: React.FC = () => {
       }
       
       // Certificate found
+      console.log('Certificate verified:', certificate);
       setVerificationResult('success');
       setCertificateData({
         studentName: certificate.profiles?.full_name || 'Student',
         courseName: certificate.courses?.title || certificate.name,
         issueDate: certificate.earned_date,
         expiryDate: new Date(new Date(certificate.earned_date).getFullYear() + 3, 
-                             new Date(certificate.earned_date).getMonth(), 
-                             new Date(certificate.earned_date).getDate()).toISOString()
+                           new Date(certificate.earned_date).getMonth(), 
+                           new Date(certificate.earned_date).getDate()).toISOString()
       });
       
       toast.success('Certificate verified successfully');
