@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, Area, AreaChart, RadialBarChart, RadialBar } from 'recharts';
@@ -7,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const Analytics: React.FC = () => {
-  // Fetch real user data for analytics if available
   const { data: analyticsData } = useQuery({
     queryKey: ['analytics-data'],
     queryFn: async () => {
@@ -15,13 +13,11 @@ const Analytics: React.FC = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
         
-        // Fetch user progress data
         const { data: progressData } = await supabase
           .from('course_progress')
           .select('*, courses(*)')
           .eq('user_id', user.id);
           
-        // Fetch assessment data
         const { data: assessmentData } = await supabase
           .from('assessment_results')
           .select('*')
@@ -38,7 +34,6 @@ const Analytics: React.FC = () => {
     }
   });
 
-  // Platform growth data - could be enhanced with real data if available
   const platformGrowthData = [
     { name: 'Sep', users: 4000, courses: 2400, completions: 1800 },
     { name: 'Oct', users: 3000, courses: 1398, completions: 1500 },
@@ -49,7 +44,6 @@ const Analytics: React.FC = () => {
     { name: 'Mar', users: 3490, courses: 4300, completions: 2800 },
   ];
 
-  // Course completion data with enhanced statistics
   const courseCompletionData = [
     { name: 'Web Dev', completed: 85, pending: 15 },
     { name: 'Mobile Dev', completed: 65, pending: 35 },
@@ -58,7 +52,6 @@ const Analytics: React.FC = () => {
     { name: 'DevOps', completed: 70, pending: 30 },
   ];
 
-  // User engagement data with more detailed breakdown
   const userEngagementData = [
     { name: 'Active Daily', value: 50, fill: '#0088FE' },
     { name: 'Active Weekly', value: 20, fill: '#00C49F' },
@@ -66,7 +59,6 @@ const Analytics: React.FC = () => {
     { name: 'Inactive', value: 15, fill: '#FF8042' },
   ];
 
-  // Learning patterns by time of day
   const timeDistributionData = [
     { time: 'Morning', hours: 3.5, fill: '#8884d8' },
     { time: 'Afternoon', hours: 2.8, fill: '#83a6ed' },
@@ -74,7 +66,6 @@ const Analytics: React.FC = () => {
     { time: 'Night', hours: 1.5, fill: '#82ca9d' },
   ];
 
-  // Engagement trends over time
   const engagementTrendData = [
     { month: 'Sep', engagement: 65, target: 70 },
     { month: 'Oct', engagement: 68, target: 72 },
@@ -87,7 +78,6 @@ const Analytics: React.FC = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#43A19E', '#7B6FDC'];
 
-  // Extract real progress data if available
   const completionRates = analyticsData?.progressData
     ? Math.round(analyticsData.progressData.reduce((sum, item) => sum + (item.progress_percentage || 0), 0) / 
       (analyticsData.progressData.length || 1))
@@ -305,7 +295,6 @@ const Analytics: React.FC = () => {
                 data={timeDistributionData}
               >
                 <RadialBar
-                  minAngle={15}
                   background
                   clockWise
                   dataKey="hours"
