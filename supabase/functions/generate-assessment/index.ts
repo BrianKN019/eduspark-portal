@@ -31,24 +31,26 @@ serve(async (req) => {
 
     console.log(`Generating ${difficulty} assessment for ${courseName} (${field}, ${level})`);
 
-    // Create improved prompt for OpenAI
+    // Create improved prompt for OpenAI with more detailed instructions
     const prompt = `
-      Create a comprehensive ${difficulty} level assessment for a ${level} course on ${field} titled "${courseName}".
+      Create a comprehensive, professional ${difficulty} level assessment for a ${level} course on ${field} titled "${courseName}".
       
-      Follow these guidelines:
+      Follow these guidelines precisely:
       1. Generate exactly ${questionCount} challenging multiple-choice questions with 4 options each
-      2. For each question, provide a clear question text that tests conceptual understanding
-      3. Make options realistic and non-obvious - avoid very clear wrong answers
-      4. Include practical scenario questions where appropriate
-      5. For coding-related topics, include code interpretation questions
+      2. For each question, provide detailed question text that tests deep conceptual understanding
+      3. Make options realistic and non-obvious - ensure all options are plausible and similarly structured
+      4. Include at least 30% practical scenario-based questions that apply theoretical knowledge
+      5. For coding-related topics, include code interpretation questions with proper syntax highlighting
       6. Indicate which option (0-3) is correct for each question
-      7. Add a brief but thorough explanation for why each correct answer is right (to be shown after answering)
-      8. Provide varied difficulty levels within the assessment to test different skills
+      7. Provide thorough, educational explanations (3-4 sentences minimum) for why the correct answer is right and why the other options are incorrect
+      8. Vary question difficulty to test both foundational knowledge and advanced applications
+      9. Use clear, concise professional language appropriate for ${level} students
+      10. Ensure questions cover the full breadth of topics in ${field}, with appropriate distribution
       
       Format the response as a valid JSON object with this structure:
       {
         "title": "${courseName} Assessment",
-        "description": "Comprehensive ${difficulty} level assessment to test your knowledge of ${field} concepts.",
+        "description": "Comprehensive ${difficulty} level assessment to evaluate mastery of key ${field} concepts and applications.",
         "difficulty": "${difficulty}",
         "questions": [
           {
@@ -56,14 +58,14 @@ serve(async (req) => {
             "text": "Question text goes here",
             "options": ["Option A", "Option B", "Option C", "Option D"],
             "correctAnswer": 0,
-            "explanation": "Brief explanation of why this answer is correct"
+            "explanation": "Detailed explanation of why this answer is correct and why others are incorrect"
           },
           ...
         ]
       }
     `;
 
-    // Call OpenAI API with improved parameters
+    // Call OpenAI API with improved parameters for higher quality content
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -71,11 +73,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o',  // Using the latest and most capable model
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational assessment creator specializing in creating challenging, fair, and educational multiple-choice questions. Your assessments should be appropriate for the specified difficulty level and subject area, and should provide valuable learning experiences for students.' 
+            content: 'You are an expert educational content creator with advanced degrees in instructional design and subject matter expertise. You create assessments that are challenging yet fair, with educational value beyond just testing knowledge. Your questions should promote critical thinking and help students understand complex concepts more deeply.' 
           },
           { role: 'user', content: prompt }
         ],
