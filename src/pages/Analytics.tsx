@@ -296,10 +296,9 @@ const Analytics: React.FC = () => {
               >
                 <RadialBar
                   background
-                  clockWise
                   dataKey="hours"
                   cornerRadius={12}
-                  label={{ position: 'insideStart', fill: '#fff', fontWeight: 600 }}
+                  label={{ position: "insideStart", fill: "#fff", fontWeight: 600 }}
                 />
                 <Tooltip 
                   contentStyle={{ 
