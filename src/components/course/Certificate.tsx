@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Award, Download, Share2, CheckCircle } from 'lucide-react';
+import { Award, Download, Share2, Shield, QRCodeIcon, CheckCircle } from 'lucide-react';
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -24,6 +24,7 @@ const Certificate: React.FC<CertificateProps> = ({
   const [studentName, setStudentName] = useState<string>('Student Name');
   const [isDownloading, setIsDownloading] = useState(false);
   const [certificateExists, setCertificateExists] = useState(false);
+  const [certificateId, setCertificateId] = useState<string>('');
 
   // Fetch current user's name and check if certificate exists
   useEffect(() => {
@@ -50,7 +51,10 @@ const Certificate: React.FC<CertificateProps> = ({
             .eq('course_id', courseId)
             .maybeSingle();
             
-          setCertificateExists(!!existingCert);
+          if (existingCert) {
+            setCertificateExists(true);
+            setCertificateId(existingCert.id);
+          }
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -75,7 +79,7 @@ const Certificate: React.FC<CertificateProps> = ({
       const canvas = await html2canvas(certificateElement, {
         scale: 4, // Higher resolution for better quality
         logging: false,
-        backgroundColor: '#0a101f', // Dark background color to match the design
+        backgroundColor: '#ffffff', // Light background
         useCORS: true,
         allowTaint: true,
         windowWidth: certificateElement.scrollWidth,
@@ -89,7 +93,7 @@ const Certificate: React.FC<CertificateProps> = ({
       
       // Create PDF with proper sizing for single page fit
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: 'landscape',
         unit: 'mm',
         format: 'a4',
         compress: true
@@ -110,6 +114,9 @@ const Certificate: React.FC<CertificateProps> = ({
       // Add image
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
+      // Add verification QR code
+      const verificationUrl = `${window.location.origin}/verify-certificate?id=${certificateId}`;
+      
       // Save PDF
       const fileName = `${courseName.replace(/\s+/g, '_')}_Certificate.pdf`;
       pdf.save(fileName);
@@ -117,7 +124,7 @@ const Certificate: React.FC<CertificateProps> = ({
       // Store certificate in database if it doesn't exist
       const { data: { user } } = await supabase.auth.getUser();
       if (user && !certificateExists) {
-        await supabase
+        const { data } = await supabase
           .from('certificates')
           .insert({
             user_id: user.id,
@@ -126,9 +133,14 @@ const Certificate: React.FC<CertificateProps> = ({
             description: `Certificate of completion for ${courseName}`,
             download_url: `/certificates/${fileName}`,
             earned_date: new Date().toISOString()
-          });
+          })
+          .select('id')
+          .single();
           
-        setCertificateExists(true);
+        if (data) {
+          setCertificateId(data.id);
+          setCertificateExists(true);
+        }
       }
       
       toast.success("Certificate downloaded successfully!");
@@ -147,7 +159,7 @@ const Certificate: React.FC<CertificateProps> = ({
       // For sharing, we need a file or URL, so create a temporary image first
       const canvas = await html2canvas(certificateRef.current, {
         scale: 2,
-        backgroundColor: '#0a101f', // Dark background color to match the design
+        backgroundColor: '#ffffff',
         useCORS: true
       });
       
@@ -200,72 +212,97 @@ const Certificate: React.FC<CertificateProps> = ({
     });
   };
   
+  // Generate verification hash based on certificate data
+  const verificationCode = `${certificateId || "CERT"}${courseId.slice(0, 4)}${new Date(completionDate).getFullYear()}`;
+  
   return (
     <div className="space-y-6">
-      <Card className="border-0 shadow-xl overflow-hidden bg-[#0a101f]">
+      <Card className="border shadow-lg overflow-hidden bg-white">
         <CardContent className="p-6">
-          <div className="flex flex-col items-center space-y-4 mb-6 text-white">
+          <div className="flex flex-col items-center space-y-4 mb-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-yellow-400 rounded-full blur-md opacity-30 animate-pulse"></div>
-              <Award className="h-16 w-16 text-yellow-400 relative z-10" />
+              <div className="absolute inset-0 bg-blue-400 rounded-full blur-md opacity-30 animate-pulse"></div>
+              <Award className="h-16 w-16 text-blue-500 relative z-10" />
             </div>
-            <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500">
+            <h2 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600">
               Congratulations on completing the course!
             </h2>
-            <p className="text-center text-gray-300">
+            <p className="text-center text-gray-600">
               You've earned this certificate of completion. Download it to showcase your achievement.
             </p>
           </div>
           
           <div 
             ref={certificateRef}
-            className="certificate-container relative border-4 border-yellow-500/50 rounded-lg mb-6 bg-[#0a101f] overflow-hidden"
+            className="certificate-container relative border border-gray-200 rounded-lg mb-6 bg-white overflow-hidden"
           >
-            {/* Golden border around certificate */}
-            <div className="absolute inset-0 border-8 border-yellow-500/50 pointer-events-none"></div>
-            
-            <div className="p-8 flex flex-col items-center text-white">
-              {/* Certificate header with gold emblem */}
-              <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mb-4">
-                <Award className="h-10 w-10 text-[#0a101f]" />
+            {/* Premium certificate design with security elements */}
+            <div className="relative p-8 flex flex-col items-center text-center">
+              {/* Decorative background elements */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#e1f5fe,transparent_70%)]"></div>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,#e3f2fd,transparent_70%)]"></div>
+              
+              {/* Certificate header */}
+              <div className="relative z-10 flex items-center justify-center mb-6">
+                <div className="h-20 w-20 relative flex items-center justify-center">
+                  <div className="absolute inset-0 bg-blue-100 rounded-full"></div>
+                  <Award className="h-10 w-10 text-blue-600" />
+                </div>
               </div>
               
               {/* Certificate title */}
-              <h1 className="text-3xl font-bold text-yellow-500 mb-8 text-center">CERTIFICATE OF COMPLETION</h1>
+              <h1 className="text-3xl font-bold text-blue-800 mb-6 relative z-10">
+                CERTIFICATE OF COMPLETION
+              </h1>
+              
+              {/* Certificate security number */}
+              <div className="absolute top-4 right-4 flex items-center text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+                <Shield className="h-3 w-3 mr-1 text-blue-500" />
+                <span>{verificationCode}</span>
+              </div>
               
               {/* Certificate content */}
-              <div className="text-center space-y-3 w-full">
-                <p className="text-gray-300">This certifies that</p>
-                <h2 className="text-3xl font-bold text-white my-3">{studentName.toUpperCase()}</h2>
-                <p className="text-gray-300">has successfully completed</p>
-                <h3 className="text-2xl font-bold text-white my-3">{courseName}</h3>
-                <p className="text-gray-300 mb-8">on {formatDate(completionDate || new Date().toISOString())}</p>
+              <div className="text-center space-y-2 w-full relative z-10">
+                <p className="text-gray-500 text-lg">This certifies that</p>
+                <h2 className="text-3xl font-serif text-gray-800 my-2">{studentName}</h2>
+                <p className="text-gray-500 text-lg">has successfully completed</p>
+                <h3 className="text-2xl font-bold text-blue-700 my-3">{courseName}</h3>
+                <p className="text-gray-500 mb-6">on {formatDate(completionDate || new Date().toISOString())}</p>
                 
                 {/* Signature and stamp section */}
                 <div className="flex justify-around items-center mt-8 w-full">
                   <div className="text-center">
-                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
-                      <div className="font-normal text-white">Jane Smith</div>
+                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-300">
+                      <div className="font-script text-gray-700">Jane Smith</div>
                     </div>
-                    <p className="text-sm text-gray-300">Course Director</p>
+                    <p className="text-sm text-gray-500">Course Director</p>
                   </div>
-                  <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-dashed border-yellow-300">
-                    <CheckCircle className="h-8 w-8 text-[#0a101f]" />
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center border border-blue-200">
+                    <CheckCircle className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="text-center">
-                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-400">
-                      <div className="font-normal text-white">John Doe</div>
+                    <div className="w-32 h-12 mx-auto mb-2 border-b border-gray-300">
+                      <div className="font-script text-gray-700">John Doe</div>
                     </div>
-                    <p className="text-sm text-gray-300">EduSpark Director</p>
+                    <p className="text-sm text-gray-500">EduSpark Director</p>
                   </div>
                 </div>
               </div>
               
-              {/* Certificate footer with verification */}
-              <div className="w-full mt-12 pt-4 border-t border-gray-700 flex justify-around text-sm text-gray-400">
+              {/* Holographic security pattern */}
+              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 opacity-50"></div>
+              
+              {/* Certificate verification */}
+              <div className="mt-12 pt-4 text-center text-sm text-gray-500 relative z-10">
+                <p>Verify this certificate at:</p>
+                <p className="font-mono text-blue-600">{window.location.origin}/verify-certificate?id={certificateId || verificationCode}</p>
+              </div>
+              
+              {/* Certificate footer */}
+              <div className="w-full mt-8 pt-4 border-t border-gray-200 flex justify-around text-xs text-gray-400">
                 <div className="text-center">
-                  <p>Course ID</p>
-                  <p>{courseId.slice(0, 8)}</p>
+                  <p>Certificate ID</p>
+                  <p className="font-mono">{certificateId || verificationCode}</p>
                 </div>
                 <div className="text-center">
                   <p>EduSpark LMS</p>
@@ -283,7 +320,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               {isDownloading ? (
                 <>Downloading...</>
@@ -296,7 +333,7 @@ const Certificate: React.FC<CertificateProps> = ({
             <Button
               variant="outline"
               onClick={handleShare}
-              className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 shadow-md hover:shadow-lg transition-all duration-300"
+              className="border-blue-500 text-blue-600 hover:bg-blue-50 shadow-md hover:shadow-lg transition-all duration-300"
             >
               <Share2 className="mr-2 h-4 w-4" /> Share Achievement
             </Button>
