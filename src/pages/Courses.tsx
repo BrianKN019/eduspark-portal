@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookOpen, Star } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { fetchCourses, updateCourseProgress } from '@/lib/api';
 import CourseCard from '@/components/CourseCard';
+import LoadingCourseCard from '@/components/LoadingCourseCard';
+import Pagination from '@/components/Pagination';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useCourseFiltering } from '@/hooks/useCourseFiltering';
 
 // Placeholder images for courses that don't have thumbnails
 const placeholderImages = [
@@ -21,16 +24,14 @@ const placeholderImages = [
 ];
 
 const Courses: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
-
-  // Add isRefetching to handle loading state properly
+  // Use a stale time to prevent frequent refetches
   const { data: courses, isLoading, error, isRefetching } = useQuery({
     queryKey: ['courses'],
     queryFn: fetchCourses,
+    staleTime: 5 * 60 * 1000, // 5 minutes stale time
   });
 
+  // Get course progress separately with its own stale time
   const { data: courseProgress } = useQuery({
     queryKey: ['courseProgress'],
     queryFn: async () => {
@@ -53,33 +54,24 @@ const Courses: React.FC = () => {
         console.error("Exception in course progress query:", e);
         return [];
       }
-    }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes stale time
   });
 
-  useEffect(() => {
-    // Process courses data to add placeholder images
-    if (courses && Array.isArray(courses)) {
-      const processed = courses.map((course, index) => {
-        // If course doesn't have a thumbnail, add one
-        if (!course.thumbnail_url) {
-          return {
-            ...course,
-            thumbnail_url: placeholderImages[index % placeholderImages.length]
-          };
-        }
-        return course;
-      });
-      
-      // Apply filters
-      const filtered = processed.filter(course =>
-        (course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         course.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (selectedCategory === 'all' || course.field === selectedCategory)
-      );
-      
-      setFilteredCourses(filtered);
-    }
-  }, [searchTerm, selectedCategory, courses]);
+  // Use our custom hook for filtering and pagination
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedCategory,
+    setSelectedCategory,
+    currentCourses,
+    currentPage,
+    setCurrentPage,
+    totalPages
+  } = useCourseFiltering({ 
+    courses, 
+    placeholderImages 
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,9 +79,7 @@ const Courses: React.FC = () => {
 
   const handleEnrollment = async (courseId: string) => {
     try {
-      console.log("Enrolling in course:", courseId);
       const result = await updateCourseProgress(courseId, 0);
-      console.log("Enrollment result:", result);
       toast.success("Successfully enrolled in the course!");
     } catch (error) {
       console.error('Enrollment error:', error);
@@ -154,20 +144,29 @@ const Courses: React.FC = () => {
       </Tabs>
 
       {isDataLoading ? (
-        <div className="flex justify-center items-center h-32">
-          <p>Loading courses...</p>
-        </div>
-      ) : filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <CourseCard 
-              key={course.id} 
-              course={course}
-              onEnroll={() => handleEnrollment(course.id)}
-              progress={getProgress(course.id)}
-            />
+          {Array(6).fill(0).map((_, index) => (
+            <LoadingCourseCard key={`loading-${index}`} />
           ))}
         </div>
+      ) : currentCourses.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentCourses.map((course) => (
+              <CourseCard 
+                key={course.id} 
+                course={course}
+                onEnroll={() => handleEnrollment(course.id)}
+                progress={getProgress(course.id)}
+              />
+            ))}
+          </div>
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
       ) : (
         <div className="flex justify-center items-center h-32">
           <p>No courses found. Try adjusting your search or category filter.</p>
